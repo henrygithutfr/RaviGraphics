@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import SEO from "./SEO";
 import {
   Phone,
   Mail,
@@ -131,6 +132,11 @@ export default function Contact() {
   };
 
   return (
+    <>
+    <SEO 
+      title="Contact Us - Get in Touch"
+      description="Get in touch with Ravi Graphics. Call, email, or visit our office in Brahmapur, Odisha. We're here to help with all your printing needs."
+    />
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <div className="bg-white border-b border-amber-100 pt-12 pb-12">
@@ -443,5 +449,6 @@ Brahmapur, Odisha 760001
         </div>
       </div>
     </div>
+    </>
   );
 }

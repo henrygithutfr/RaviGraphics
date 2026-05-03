@@ -31,6 +31,19 @@ export default function AdminProducts() {
     images: [""]
   });
 
+  // Define resetForm function
+  const resetForm = () => {
+    setFormData({
+      id: "",
+      name: "",
+      slug: "",
+      description: "",
+      pricing: { type: "fixed", amount: "", currency: "INR", unit: "per 1000" },
+      images: [""]
+    });
+    setEditingProduct(null);
+  };
+
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -57,63 +70,62 @@ export default function AdminProducts() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    // Make sure we have valid data
-    const productData = {
-      id: formData.id || formData.name.toLowerCase().replace(/\s+/g, '-'),
-      name: formData.name,
-      slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
-      description: formData.description || "",
-      pricing: {
-        type: formData.pricing.type,
-        amount: formData.pricing.type === "fixed" ? Number(formData.pricing.amount) : undefined,
-        currency: "INR",
-        unit: formData.pricing.type === "fixed" ? (formData.pricing.unit || "per 1000") : undefined
-      },
-      images: formData.images.filter(img => img && img.trim())
-    };
+    e.preventDefault();
+    try {
+      // Make sure we have valid data
+      const productData = {
+        id: formData.id || formData.name.toLowerCase().replace(/\s+/g, '-'),
+        name: formData.name,
+        slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
+        description: formData.description || "",
+        pricing: {
+          type: formData.pricing.type,
+          amount: formData.pricing.type === "fixed" ? Number(formData.pricing.amount) : undefined,
+          currency: "INR",
+          unit: formData.pricing.type === "fixed" ? (formData.pricing.unit || "per 1000") : undefined
+        },
+        images: formData.images.filter(img => img && img.trim())
+      };
 
-    // If pricing type is 'quote', remove amount and unit
-    if (productData.pricing.type === "quote") {
-      delete productData.pricing.amount;
-      delete productData.pricing.unit;
-    }
+      // If pricing type is 'quote', remove amount and unit
+      if (productData.pricing.type === "quote") {
+        delete productData.pricing.amount;
+        delete productData.pricing.unit;
+      }
 
-    const payload = {
-      categoryId: selectedCategory._id,
-      product: productData
-    };
+      const payload = {
+        categoryId: selectedCategory._id,
+        product: productData
+      };
 
-    console.log("Sending payload:", JSON.stringify(payload, null, 2));
+      console.log("Sending payload:", JSON.stringify(payload, null, 2));
 
-    if (editingProduct) {
-      const response = await axios.put(
-        `http://localhost:4001/api/admin/products/${editingProduct.id}`, 
-        payload,
-        { headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` } }
-      );
-      console.log("Update response:", response.data);
-    } else {
-      const response = await axios.post(
-        "http://localhost:4001/api/admin/products", 
-        payload,
-        { headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` } }
-      );
-      console.log("Create response:", response.data);
-    }
+      if (editingProduct) {
+        const response = await axios.put(
+          `http://localhost:4001/api/admin/products/${editingProduct.id}`, 
+          payload,
+          { headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` } }
+        );
+        console.log("Update response:", response.data);
+      } else {
+        const response = await axios.post(
+          "http://localhost:4001/api/admin/products", 
+          payload,
+          { headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` } }
+        );
+        console.log("Create response:", response.data);
+      }
+      
+      await fetchCategories(); // Refresh the data
+      setShowModal(false);
+      resetForm(); // Now this will work
     
-    await fetchCategories(); // Refresh the data
-    setShowModal(false);
-    setEditingProduct(null);
-    resetForm();
-    
-    alert(editingProduct ? "Product updated successfully!" : "Product created successfully!");
-  } catch (error) {
-    console.error("Error saving product:", error);
-    alert("Error saving product: " + (error.response?.data?.error || error.message));
-  }
-};
+      alert(editingProduct ? "Product updated successfully!" : "Product created successfully!");
+    } catch (error) {
+      console.error("Error saving product:", error);
+      alert("Error saving product: " + (error.response?.data?.error || error.message));
+    }
+  };
 
   const handleDelete = async (productId) => {
     if (confirm("Are you sure you want to delete this product?")) {
@@ -129,7 +141,7 @@ export default function AdminProducts() {
     }
   };
 
-  // NEW: Handle category price_do update
+  // Handle category price_do update
   const handleCategoryPriceDoUpdate = async (newPrice) => {
     try {
       const updatedCategory = {
@@ -142,7 +154,10 @@ export default function AdminProducts() {
       });
       
       // Refresh the category data
-      fetchCategories();
+      await fetchCategories();
+      // Update selected category with new price
+      const updatedCat = categories.find(c => c._id === selectedCategory._id);
+      setSelectedCategory(updatedCat);
       alert("Design Only price updated successfully!");
     } catch (error) {
       console.error("Error updating design only price:", error);
@@ -239,14 +254,7 @@ export default function AdminProducts() {
         <button
           onClick={() => {
             setEditingProduct(null);
-            setFormData({
-              id: "",
-              name: "",
-              slug: "",
-              description: "",
-              pricing: { type: "fixed", amount: "", currency: "INR", unit: "per 1000" },
-              images: [""]
-            });
+            resetForm();
             setShowModal(true);
           }}
           className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
@@ -307,7 +315,11 @@ export default function AdminProducts() {
       {products.length === 0 && (
         <div className="text-center py-12 bg-white rounded-xl">
           <p className="text-gray-500">No products in this category yet.</p>
-          <button onClick={() => setShowModal(true)} className="mt-4 text-orange-600 hover:underline">Add your first product</button>
+          <button onClick={() => {
+            setEditingProduct(null);
+            resetForm();
+            setShowModal(true);
+          }} className="mt-4 text-orange-600 hover:underline">Add your first product</button>
         </div>
       )}
 
@@ -317,7 +329,10 @@ export default function AdminProducts() {
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
               <h3 className="text-xl font-bold">{editingProduct ? "Edit Product" : "Add Product"}</h3>
-              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">✕</button>
+              <button onClick={() => {
+                setShowModal(false);
+                resetForm();
+              }} className="p-1 hover:bg-gray-100 rounded-lg">✕</button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>

@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { Sparkles, AlertCircle, Settings, CheckCircle2, Heart } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import SEO from "./SEO";
 
 export default function CategoryPage() {
   const { categorySlug } = useParams();
@@ -71,7 +72,17 @@ export default function CategoryPage() {
     );
   }
 
+  const seoTitle = category?.name
+  ? `${category.name} Printing Services in Odisha | Ravi Graphics`
+  : "Printing & Graphic Design Services in Odisha | Ravi Graphics";
+
+const seoDescription = category?.description
+  ? `${category.description}. High-quality ${category.name.toLowerCase()} printing with fast turnaround in Odisha.`
+  : "Professional printing and graphic design services in Odisha including business cards, banners, brochures, posters and more.";
+
   return (
+    <>
+    <SEO title={seoTitle} description={seoDescription} />
     <div className="max-w-7xl mx-auto px-4 py-12">
       {/* Breadcrumb */}
       <div className="text-sm text-gray-500 mb-6">
@@ -161,5 +172,6 @@ export default function CategoryPage() {
         ))}
       </div>
     </div>
+    </>
   );
 }

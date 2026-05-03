@@ -1,8 +1,14 @@
 // PrivacyPolicy.jsx
 import { Shield, Lock, Eye, Database, Globe, Mail, Users, Camera, FileText, Clock } from "lucide-react";
+import SEO from "./SEO";
 
 export default function PrivacyPolicy() {
   return (
+    <>
+    <SEO 
+      title="Privacy Policy | Ravi Graphics"
+      description="Read the privacy policy of Ravi Graphics to understand how we collect, use and protect your personal information when using our printing and design services."
+    />
     <div className="bg-gray-50 min-h-screen py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -150,6 +156,7 @@ export default function PrivacyPolicy() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

@@ -40,6 +40,7 @@ import {
   LogIn,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import SEO from "./SEO";
 
 export default function ProductPage() {
   const { categorySlug, productSlug } = useParams();
@@ -667,7 +668,17 @@ export default function ProductPage() {
     );
   }
 
+  const seoTitle = product?.name
+  ? `${product.name} Printing in Odisha | Ravi Graphics`
+  : "Printing Services in Odisha | Ravi Graphics";
+
+const seoDescription = product?.description
+  ? `${product.description}. High-quality ${product.name.toLowerCase()} printing with fast turnaround in Odisha.`
+  : "Professional printing and graphic design services including business cards, banners, brochures, posters and more.";
+
   return (
+    <>
+    <SEO title={seoTitle} description={seoDescription} />
     <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
       {/* Breadcrumb */}
       <div className="text-sm text-gray-500 mb-6 flex items-center gap-2 flex-wrap">
@@ -1847,5 +1858,6 @@ export default function ProductPage() {
         </div>
       )}
     </div>
+    </>
   );
 }

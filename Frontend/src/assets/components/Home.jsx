@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import SEO from "./SEO";
+
 import {
   Search,
   Calendar,
@@ -51,8 +53,28 @@ function Home() {
   const [selectedImage, setSelectedImage] = useState(null);
   const sliderRef = useRef(null);
 
-  // Font import for professional look
+  // Color Palette CSS variables
   useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      :root {
+        --primary: #F25C05;
+        --primary-dark: #C94800;
+        --bg-main: #F8F9FB;
+        --surface: #FFFFFF;
+        --text-primary: #1A1A1A;
+        --text-secondary: #6B7280;
+        --border: #E5E7EB;
+        --accent-purple: #7B2CBF;
+        --accent-blue: #2D9CDB;
+        --accent-yellow: #F2C94C;
+        --accent-red: #EB5757;
+        --gradient-start: #F25C05;
+        --gradient-end: #EB5757;
+      }
+    `;
+    document.head.appendChild(style);
+
     const link = document.createElement("link");
     link.href =
       "https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Playfair+Display:wght@400;500;600;700&display=swap";
@@ -97,32 +119,14 @@ function Home() {
     fetchData();
   }, []);
 
-  // Trusted Brands/Logos (replace with actual client logos)
+  // Trusted Brands/Logos
   const trustedBrands = [
-    {
-      name: "Tata Group",
-      logo: "https://placehold.co/120x60/fef3c7/ea580c?text=Tata",
-    },
-    {
-      name: "Reliance",
-      logo: "https://placehold.co/120x60/fef3c7/ea580c?text=Reliance",
-    },
-    {
-      name: "Aditya Birla",
-      logo: "https://placehold.co/120x60/fef3c7/ea580c?text=Aditya+Birla",
-    },
-    {
-      name: "ITC Limited",
-      logo: "https://placehold.co/120x60/fef3c7/ea580c?text=ITC",
-    },
-    {
-      name: "Mahindra",
-      logo: "https://placehold.co/120x60/fef3c7/ea580c?text=Mahindra",
-    },
-    {
-      name: "Godrej",
-      logo: "https://placehold.co/120x60/fef3c7/ea580c?text=Godrej",
-    },
+    { name: "Tata Group", logo: "https://placehold.co/120x60/fef3c7/ea580c?text=Tata" },
+    { name: "Reliance", logo: "https://placehold.co/120x60/fef3c7/ea580c?text=Reliance" },
+    { name: "Aditya Birla", logo: "https://placehold.co/120x60/fef3c7/ea580c?text=Aditya+Birla" },
+    { name: "ITC Limited", logo: "https://placehold.co/120x60/fef3c7/ea580c?text=ITC" },
+    { name: "Mahindra", logo: "https://placehold.co/120x60/fef3c7/ea580c?text=Mahindra" },
+    { name: "Godrej", logo: "https://placehold.co/120x60/fef3c7/ea580c?text=Godrej" },
   ];
 
   // Stats counter
@@ -149,22 +153,10 @@ function Home() {
       const interval = setInterval(() => {
         currentStep++;
         setStats({
-          clients: Math.min(
-            targets.clients,
-            Math.floor((currentStep / steps) * targets.clients),
-          ),
-          projects: Math.min(
-            targets.projects,
-            Math.floor((currentStep / steps) * targets.projects),
-          ),
-          years: Math.min(
-            targets.years,
-            Math.floor((currentStep / steps) * targets.years),
-          ),
-          designers: Math.min(
-            targets.designers,
-            Math.floor((currentStep / steps) * targets.designers),
-          ),
+          clients: Math.min(targets.clients, Math.floor((currentStep / steps) * targets.clients)),
+          projects: Math.min(targets.projects, Math.floor((currentStep / steps) * targets.projects)),
+          years: Math.min(targets.years, Math.floor((currentStep / steps) * targets.years)),
+          designers: Math.min(targets.designers, Math.floor((currentStep / steps) * targets.designers)),
         });
         if (currentStep >= steps) clearInterval(interval);
       }, stepTime);
@@ -187,7 +179,7 @@ function Home() {
   ];
 
   const filteredItems = portfolioItems.filter(
-    (item) => filter === "all" || item.category === filter,
+    (item) => filter === "all" || item.category === filter
   );
 
   const scrollLeft = () => {
@@ -203,54 +195,27 @@ function Home() {
   };
 
   const steps = [
-    {
-      icon: Search,
-      title: "Choose Product",
-      description: "Browse our extensive catalog of printing solutions",
-    },
-    {
-      icon: MessageSquare,
-      title: "Share Requirements",
-      description: "Tell us your specs, quantity, and preferences",
-    },
-    {
-      icon: Palette,
-      title: "Get Design Proof",
-      description: "Review digital proof within 24 hours",
-    },
-    {
-      icon: Printer,
-      title: "Production",
-      description: "State-of-the-art printing with quality checks",
-    },
-    {
-      icon: Shield,
-      title: "Quality Assurance",
-      description: "Multi-point inspection before shipping",
-    },
-    {
-      icon: Truck,
-      title: "Fast Delivery",
-      description: "Tracked shipping right to your doorstep",
-    },
+    { icon: Search, title: "Choose Product", description: "Browse our extensive catalog of printing solutions" },
+    { icon: MessageSquare, title: "Share Requirements", description: "Tell us your specs, quantity, and preferences" },
+    { icon: Palette, title: "Get Design Proof", description: "Review digital proof within 24 hours" },
+    { icon: Printer, title: "Production", description: "State-of-the-art printing with quality checks" },
+    { icon: Shield, title: "Quality Assurance", description: "Multi-point inspection before shipping" },
+    { icon: Truck, title: "Fast Delivery", description: "Tracked shipping right to your doorstep" },
   ];
 
   const latestProducts = services.slice(0, 4).map((service, index) => ({
     id: service._id || index,
     name: service.name,
     category: "New Arrival",
-    price:
-      service.services?.[0]?.pricing?.type === "fixed"
-        ? `From ₹${service.services[0].pricing.amount}`
-        : "Request Quote",
-    image:
-      service.image || `https://picsum.photos/seed/${service.slug}/400/300`,
+    price: service.services?.[0]?.pricing?.type === "fixed"
+      ? `From ₹${service.services[0].pricing.amount}`
+      : "Request Quote",
+    image: service.image || `https://picsum.photos/seed/${service.slug}/400/300`,
     badge: "New",
     slug: service.slug,
   }));
 
   const topProducts = services.slice(0, 6).map((service, index) => {
-    const firstService = service.services?.[0];
     return {
       id: service._id || service.slug,
       name: service.name,
@@ -259,42 +224,89 @@ function Home() {
       rating: 4.8,
       reviews: Math.floor(Math.random() * 500) + 100,
       badge: index < 3 ? "Best Seller" : "Top Rated",
-      image:
-        service.image || `https://picsum.photos/seed/${service.slug}/600/400`,
-      features: service.options?.slice(0, 2).map((opt) => opt.options[0]) || [
-        "Premium Quality",
-        "Fast Delivery",
-      ],
+      image: service.image || `https://picsum.photos/seed/${service.slug}/600/400`,
+      features: service.options?.slice(0, 2).map((opt) => opt.options[0]) || ["Premium Quality", "Fast Delivery"],
       slug: service.slug,
     };
   });
 
+
+const words = [
+  { text: "Where", font: "font-vibes", color: "text-orange" },
+  { text: "Your", font: "font-elegant", color: "text-purple" },
+  { text: "Ideas", font: "font-bold-modern", color: "text-orange", dynamic: true },
+  { text: "Come", font: "font-modern", color: "text-main" },
+  { text: "to", font: "font-modern", color: "text-gray-500" },
+  { text: "Life", font: "font-elegant", color: "text-purple", dynamic: true },
+  { text: "in", font: "font-modern", color: "text-gray-500" },
+  { text: "Print", font: "font-bold-modern", color: "text-orange", dynamic: true }
+];
+
+const styleMap = {
+  normal: "font-modern text-main",
+  accent: "font-elegant text-purple",
+  highlight: "font-bold-modern text-orange",
+  muted: "font-modern text-gray-500"
+};
+
+// controlled variation
+const getStyle = (i) => {
+  const font = fonts[i % fonts.length];
+
+  // avoid light colors stacking → keeps readability
+  const color = colors[(i * 2) % colors.length];
+
+  return `${font} ${color}`;
+};
+
+const highlightColors = [
+  "text-orange",
+  "text-purple",
+  "text-pink",
+  "text-blue"
+];
+
+const [index, setIndex] = useState(0);
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    setIndex(prev => (prev + 1) % highlightColors.length);
+  }, 2500);
+  return () => clearInterval(interval);
+}, []);
+
   return (
     <>
+    <SEO 
+  title="Best Printing & Graphic Design Services in India | Ravi Graphics"
+  description="Professional printing & graphic design services in India. Business cards, banners, posters & custom designs. High-quality prints with fast delivery. Order now."
+/>
       <style>{`
         body {
           font-family: 'Inter', sans-serif;
+          background-color: var(--bg-main);
         }
         h1, h2 .font-display {
           font-family: 'Playfair Display', serif;
         }
         .gradient-text {
-          background: linear-gradient(135deg, #dc2626 0%, #ea580c 50%, #f97316 100%);
+          background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
         }
         .btn-gradient {
-          background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+          background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
           transition: all 0.3s ease;
         }
         .btn-gradient:hover {
-          background: linear-gradient(135deg, #b91c1c 0%, #c2410c 100%);
+          background: linear-gradient(135deg, var(--primary-dark) 0%, #C94800 100%);
           transform: translateY(-2px);
-          box-shadow: 0 10px 25px -5px rgba(220, 38, 38, 0.3);
+          box-shadow: 0 10px 25px -5px rgba(242, 92, 5, 0.3);
         }
         .stat-card {
-          background: linear-gradient(135deg, rgba(220, 38, 38, 0.05) 0%, rgba(234, 88, 12, 0.05) 100%);
+          background: linear-gradient(135deg, rgba(242, 92, 5, 0.05) 0%, rgba(235, 87, 87, 0.05) 100%);
+          backdrop-filter: blur(10px);
         }
         .service-card {
           transition: all 0.3s ease;
@@ -305,26 +317,34 @@ function Home() {
         }
       `}</style>
 
-      {/* HERO SECTION - Red-Orange Theme */}
-      <section className="relative w-full overflow-hidden bg-gradient-to-br from-red-50 via-white to-orange-50">
-        <div className="absolute top-20 right-0 w-96 h-96 bg-red-200/30 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-0 w-96 h-96 bg-orange-200/30 rounded-full blur-3xl"></div>
+      {/* HERO SECTION */}
+      <section className="relative w-full overflow-hidden bg-gradient-to-br from-orange-100 via-white to-purple-50">
+        
+        <div className="absolute top-20 right-0 w-96 h-96 bg-orange-200/30 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-0 w-96 h-96 bg-red-200/30 rounded-full blur-3xl"></div>
 
         <div className="max-w-7xl mx-auto px-6 py-16 lg:py-24 relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* LEFT CONTENT */}
             <div>
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-100 to-orange-100 px-4 py-2 rounded-full mb-6 border border-red-200">
-                <Printer className="w-4 h-4 text-red-600" />
-                <span className="text-red-700 text-sm font-semibold">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-100 to-red-100 px-4 py-2 rounded-full mb-6 border border-orange-200">
+                <Printer className="w-4 h-4 text-orange-600" />
+                <span className="text-orange-700 text-sm font-semibold">
                   India's Premier Print Partner
                 </span>
               </div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.2] tracking-tight">
-                Where Your <span className="gradient-text">Ideas</span> Come
-                <br />
-                to Life in Print
-              </h1>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl leading-[1.15] tracking-tight font-bold">
+  <span className="whitespace-nowrap mr-3">
+    <span className="font-vibes text-orange">Where</span>{" "}
+    <span className="font-vibes text-purple">Your</span>
+  </span>
+
+  <span className="font-bold-modern text-main  mr-3">Ideas</span>
+  <br />
+  <span className="font-modern text-main mr-3">Come</span>
+  <span className="font-elegant text-purple mr-3">to Life</span>
+  <span className="font-modern gradient-text">in Print</span>
+</h1>
               <p className="mt-6 text-gray-600 text-base sm:text-lg max-w-lg leading-relaxed">
                 Premium printing and custom designs for businesses across India.
                 Fast turnaround, eco-friendly materials, and exceptional quality
@@ -334,7 +354,7 @@ function Home() {
               {/* Trust Badges */}
               <div className="flex flex-wrap gap-4 mt-8">
                 <div className="flex items-center gap-2">
-                  <BadgeCheck className="w-5 h-5 text-red-500" />
+                  <BadgeCheck className="w-5 h-5 text-blue-500" />
                   <span className="text-sm text-gray-600">ISO Certified</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -354,7 +374,7 @@ function Home() {
                   </button>
                 </Link>
                 <Link to="/services">
-                  <button className="px-8 py-3.5 border-2 border-red-600 text-red-600 rounded-lg font-semibold hover:bg-red-50 transition">
+                  <button className="px-8 py-3.5 border-2 border-orange-500 text-orange-600 rounded-lg font-semibold hover:bg-orange-50 transition">
                     Explore Services
                   </button>
                 </Link>
@@ -366,7 +386,7 @@ function Home() {
                   {[1, 2, 3, 4].map((i) => (
                     <div
                       key={i}
-                      className="w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-orange-500 border-2 border-white flex items-center justify-center text-white text-xs font-bold"
+                      className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-red-500 border-2 border-white flex items-center justify-center text-white text-xs font-bold"
                     >
                       {String.fromCharCode(64 + i)}
                     </div>
@@ -377,20 +397,20 @@ function Home() {
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className="w-4 h-4 fill-amber-400 text-amber-400"
+                        className="w-4 h-4 fill-yellow-400 text-yellow-400"
                       />
                     ))}
                   </div>
                   <p className="text-sm text-gray-500 mt-1">
                     Trusted by{" "}
-                    <span className="font-semibold text-red-600">5,000+</span>{" "}
+                    <span className="font-semibold text-orange-600">5,000+</span>{" "}
                     happy clients
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* RIGHT - IMAGE GALLERY with red-orange theme */}
+            {/* RIGHT - IMAGE GALLERY */}
             <div className="relative w-full h-full overflow-hidden">
               <div className="hidden md:flex gap-5 items-center justify-center h-full min-h-[600px]">
                 <div className="relative w-72 h-[500px] overflow-hidden rounded-2xl">
@@ -404,7 +424,7 @@ function Home() {
                           <img
                             src={image.src}
                             alt={image.alt}
-                            className="w-full h-52 object-cover rounded-xl shadow-md transform transition-transform duration-300 group-hover:scale-105 group-hover:shadow-red-200"
+                            className="w-full h-52 object-cover rounded-xl shadow-md transform transition-transform duration-300 group-hover:scale-105"
                           />
                         </div>
                       </Link>
@@ -470,54 +490,32 @@ function Home() {
 
               <style jsx>{`
                 @keyframes scrollTopToBottom {
-                  0% {
-                    transform: translateY(0);
-                  }
-                  100% {
-                    transform: translateY(-50%);
-                  }
+                  0% { transform: translateY(0); }
+                  100% { transform: translateY(-50%); }
                 }
                 @keyframes scrollBottomToTop {
-                  0% {
-                    transform: translateY(-50%);
-                  }
-                  100% {
-                    transform: translateY(0);
-                  }
+                  0% { transform: translateY(-50%); }
+                  100% { transform: translateY(0); }
                 }
                 @keyframes scrollHorizontal {
-                  0% {
-                    transform: translateX(0);
-                  }
-                  100% {
-                    transform: translateX(-50%);
-                  }
+                  0% { transform: translateX(0); }
+                  100% { transform: translateX(-50%); }
                 }
-                .animate-scroll-top-bottom {
-                  animation: scrollTopToBottom 35s linear infinite;
-                }
-                .animate-scroll-bottom-top {
-                  animation: scrollBottomToTop 45s linear infinite;
-                }
-                .animate-scroll-top-bottom-slow {
-                  animation: scrollTopToBottom 40s linear infinite;
-                }
-                .animate-scroll-horizontal {
-                  animation: scrollHorizontal 20s linear infinite;
-                }
+                .animate-scroll-top-bottom { animation: scrollTopToBottom 35s linear infinite; }
+                .animate-scroll-bottom-top { animation: scrollBottomToTop 45s linear infinite; }
+                .animate-scroll-top-bottom-slow { animation: scrollTopToBottom 40s linear infinite; }
+                .animate-scroll-horizontal { animation: scrollHorizontal 20s linear infinite; }
                 .animate-scroll-top-bottom:hover,
                 .animate-scroll-bottom-top:hover,
                 .animate-scroll-top-bottom-slow:hover,
-                .animate-scroll-horizontal:hover {
-                  animation-play-state: paused;
-                }
+                .animate-scroll-horizontal:hover { animation-play-state: paused; }
               `}</style>
             </div>
           </div>
         </div>
       </section>
 
-      {/* TRUSTED BY SECTION - New */}
+      {/* TRUSTED BY SECTION */}
       <section className="py-12 bg-white border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-6">
           <p className="text-center text-gray-400 text-sm uppercase tracking-wider mb-8">
@@ -540,8 +538,8 @@ function Home() {
         </div>
       </section>
 
-      {/* STATS SECTION - New */}
-      <section className="py-16 bg-gradient-to-r from-red-600 to-orange-600">
+      {/* STATS SECTION */}
+      <section className="py-16 bg-gradient-to-r from-orange-500 to-red-500">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div className="stat-card rounded-xl p-6 backdrop-blur-sm">
@@ -578,17 +576,17 @@ function Home() {
         </div>
       </section>
 
-      {/* SERVICES SECTION - Redesigned with consistent, modern cards */}
+      {/* SERVICES SECTION */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-14">
-            <span className="text-red-600 font-semibold text-sm uppercase tracking-wide">
+            <span className="text-orange-600 font-semibold text-sm uppercase tracking-wide">
               What We Offer
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 mb-4">
               Our Premium Services
             </h2>
-            <div className="w-20 h-1 bg-gradient-to-r from-red-500 to-orange-500 mx-auto rounded-full"></div>
+            <div className="w-20 h-1 bg-gradient-to-r from-orange-500 to-red-500 mx-auto rounded-full"></div>
             <p className="text-gray-600 max-w-2xl mx-auto mt-4">
               Comprehensive printing solutions tailored to your business needs
             </p>
@@ -600,25 +598,22 @@ function Home() {
                 <div className="service-card group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100">
                   <div className="relative h-48 overflow-hidden bg-gray-100">
                     <img
-                      src={
-                        item.image ||
-                        `https://picsum.photos/seed/${item.slug}/400/300`
-                      }
+                      src={item.image || `https://picsum.photos/seed/${item.slug}/400/300`}
                       alt={item.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
                   <div className="p-5">
-                    <h3 className="text-lg font-bold text-gray-800 group-hover:text-red-600 transition-colors mb-1">
+                    <h3 className="text-lg font-bold text-gray-800 group-hover:text-orange-600 transition-colors mb-1">
                       {item.name}
                     </h3>
                     <p className="text-sm text-gray-500">
                       {item.services?.length || 0} products available
                     </p>
-                    <div className="mt-4 flex items-center text-red-500 font-medium text-sm">
+                    <div className="mt-4 flex items-center text-orange-500 font-medium text-sm">
                       Explore{" "}
-                      <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition" />
                     </div>
                   </div>
                 </div>
@@ -629,20 +624,20 @@ function Home() {
       </section>
 
       {/* LATEST PRODUCTS */}
-      <section className="py-20 bg-gradient-to-br from-red-50 via-white to-orange-50">
+      <section className="py-20 bg-gradient-to-br from-orange-50 via-white to-red-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-end mb-12 flex-wrap gap-4">
             <div>
-              <span className="text-red-600 font-semibold text-sm uppercase tracking-wide">
+              <span className="text-orange-600 font-semibold text-sm uppercase tracking-wide">
                 Fresh Arrivals
               </span>
               <h2 className="text-3xl font-bold text-gray-900 mt-1">
                 Latest Products
               </h2>
-              <div className="w-12 h-0.5 bg-gradient-to-r from-red-500 to-orange-500 mt-2"></div>
+              <div className="w-12 h-0.5 bg-gradient-to-r from-orange-500 to-red-500 mt-2"></div>
             </div>
             <Link to="/services">
-              <button className="text-red-600 hover:text-red-700 transition flex items-center gap-1 group font-medium">
+              <button className="text-orange-600 hover:text-orange-700 transition flex items-center gap-1 group font-medium">
                 View All{" "}
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
               </button>
@@ -659,7 +654,7 @@ function Home() {
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                     />
-                    <span className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-sm">
+                    <span className="absolute top-3 right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-sm">
                       {product.badge}
                     </span>
                   </div>
@@ -667,10 +662,10 @@ function Home() {
                     <p className="text-gray-500 text-xs uppercase tracking-wider">
                       {product.category}
                     </p>
-                    <h3 className="font-bold text-gray-800 text-lg mt-1 group-hover:text-red-600 transition-colors line-clamp-1">
+                    <h3 className="font-bold text-gray-800 text-lg mt-1 group-hover:text-orange-600 transition-colors line-clamp-1">
                       {product.name}
                     </h3>
-                    <p className="text-red-600 font-semibold mt-2">
+                    <p className="text-orange-600 font-semibold mt-2">
                       {product.price}
                     </p>
                   </div>
@@ -685,13 +680,13 @@ function Home() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-14">
-            <span className="text-red-600 font-semibold text-sm uppercase tracking-wide">
+            <span className="text-orange-600 font-semibold text-sm uppercase tracking-wide">
               Simple Process
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 mb-4">
               How It Works
             </h2>
-            <div className="w-20 h-1 bg-gradient-to-r from-red-500 to-orange-500 mx-auto rounded-full"></div>
+            <div className="w-20 h-1 bg-gradient-to-r from-orange-500 to-red-500 mx-auto rounded-full"></div>
             <p className="text-gray-600 max-w-2xl mx-auto mt-4">
               From concept to delivery in 6 simple steps
             </p>
@@ -706,8 +701,8 @@ function Home() {
                   className="bg-white rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100 group"
                 >
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center group-hover:scale-110 transition">
-                      <IconComponent className="w-7 h-7 text-red-500" />
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center group-hover:scale-110 transition">
+                      <IconComponent className="w-7 h-7 text-orange-500" />
                     </div>
                     <span className="text-4xl font-bold text-gray-200">
                       0{index + 1}
@@ -738,13 +733,13 @@ function Home() {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <span className="text-red-600 font-semibold text-sm uppercase tracking-wide">
+            <span className="text-orange-600 font-semibold text-sm uppercase tracking-wide">
               Our Work
             </span>
             <h2 className="text-3xl font-bold text-gray-900 mt-2 mb-4">
               Recent Projects
             </h2>
-            <div className="w-20 h-1 bg-gradient-to-r from-red-500 to-orange-500 mx-auto rounded-full"></div>
+            <div className="w-20 h-1 bg-gradient-to-r from-orange-500 to-red-500 mx-auto rounded-full"></div>
             <p className="text-gray-600 max-w-2xl mx-auto mt-4">
               See what we've created for businesses across India
             </p>
@@ -757,7 +752,7 @@ function Home() {
                 onClick={() => setFilter(cat.id)}
                 className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
                   filter === cat.id
-                    ? "bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md"
+                    ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
@@ -771,13 +766,13 @@ function Home() {
               <>
                 <button
                   onClick={scrollLeft}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-600 hover:bg-gray-50 -ml-4 hover:text-red-500 transition"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-600 hover:bg-gray-50 -ml-4 hover:text-orange-500 transition"
                 >
                   <ArrowLeft />
                 </button>
                 <button
                   onClick={scrollRight}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-600 hover:bg-gray-50 -mr-4 hover:text-red-500 transition"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-600 hover:bg-gray-50 -mr-4 hover:text-orange-500 transition"
                 >
                   <ArrowRight />
                 </button>
@@ -814,11 +809,11 @@ function Home() {
                         </div>
                       </div>
                       <div className="p-4">
-                        <h3 className="font-semibold text-gray-800 group-hover:text-red-600 transition">
+                        <h3 className="font-semibold text-gray-800 group-hover:text-orange-600 transition">
                           {item.title}
                         </h3>
                         <p className="text-gray-500 text-sm">{item.client}</p>
-                        <p className="text-red-500 text-xs mt-1">
+                        <p className="text-orange-500 text-xs mt-1">
                           {item.material}
                         </p>
                       </div>
@@ -854,14 +849,14 @@ function Home() {
                 className="w-full h-auto max-h-[50vh] object-contain bg-gray-100"
               />
               <div className="p-5">
-                <p className="text-red-600 text-sm mb-1">
+                <p className="text-orange-600 text-sm mb-1">
                   {selectedImage.client}
                 </p>
                 <p className="text-gray-500 text-sm mb-4">
                   {selectedImage.material}
                 </p>
                 <Link to={`/services/${selectedImage.categorySlug}`}>
-                  <button className="w-full py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-medium hover:shadow-lg transition">
+                  <button className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-medium hover:shadow-lg transition">
                     View Products →
                   </button>
                 </Link>
@@ -875,16 +870,16 @@ function Home() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-100 to-orange-100 px-4 py-2 rounded-full mb-4">
-              <TrendingUp className="w-4 h-4 text-red-600" />
-              <span className="text-red-700 text-sm font-semibold">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-100 to-red-100 px-4 py-2 rounded-full mb-4">
+              <TrendingUp className="w-4 h-4 text-orange-600" />
+              <span className="text-orange-700 text-sm font-semibold">
                 Best Sellers
               </span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
               Top Products
             </h2>
-            <div className="w-20 h-1 bg-gradient-to-r from-red-500 to-orange-500 mx-auto rounded-full"></div>
+            <div className="w-20 h-1 bg-gradient-to-r from-orange-500 to-red-500 mx-auto rounded-full"></div>
             <p className="text-gray-600 max-w-2xl mx-auto mt-4">
               Our most popular printing products loved by thousands
             </p>
@@ -900,7 +895,7 @@ function Home() {
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                     />
-                    <span className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                    <span className="absolute top-3 left-3 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
                       {product.badge}
                     </span>
                     <button
@@ -922,7 +917,7 @@ function Home() {
                         {product.category}
                       </span>
                       <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                         <span className="text-sm font-medium text-gray-700">
                           {product.rating}
                         </span>
@@ -931,7 +926,7 @@ function Home() {
                         </span>
                       </div>
                     </div>
-                    <h3 className="text-lg font-bold text-gray-800 mb-1 group-hover:text-red-600 transition line-clamp-1">
+                    <h3 className="text-lg font-bold text-gray-800 mb-1 group-hover:text-orange-600 transition line-clamp-1">
                       {product.name}
                     </h3>
                     <p className="text-sm text-gray-500 mb-3">{product.type}</p>
@@ -945,9 +940,7 @@ function Home() {
                         </span>
                       ))}
                     </div>
-
-                    {/* REPLACED price section with EXPLORE button */}
-                    <button className="w-full py-2.5 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg flex items-center justify-center gap-2 font-semibold text-sm shadow-sm hover:shadow-md transition-all duration-300 group-hover:gap-3">
+                    <button className="w-full py-2.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg flex items-center justify-center gap-2 font-semibold text-sm shadow-sm hover:shadow-md transition-all duration-300 group-hover:gap-3">
                       Explore Product <Eye className="w-4 h-4" />
                     </button>
                   </div>
@@ -958,7 +951,7 @@ function Home() {
 
           <div className="text-center mt-10">
             <Link to="/services">
-              <button className="px-8 py-3 border-2 border-red-600 text-red-600 rounded-lg font-semibold hover:bg-red-50 transition inline-flex items-center gap-2 group">
+              <button className="px-8 py-3 border-2 border-orange-500 text-orange-600 rounded-lg font-semibold hover:bg-orange-50 transition inline-flex items-center gap-2 group">
                 View All Products{" "}
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition" />
               </button>
@@ -967,26 +960,26 @@ function Home() {
         </div>
       </section>
 
-      {/* WHY CHOOSE US SECTION - New */}
+      {/* WHY CHOOSE US SECTION */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-14">
-            <span className="text-red-600 font-semibold text-sm uppercase tracking-wide">
+            <span className="text-orange-600 font-semibold text-sm uppercase tracking-wide">
               Why Choose Us
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 mb-4">
               The Ravi Graphics Advantage
             </h2>
-            <div className="w-20 h-1 bg-gradient-to-r from-red-500 to-orange-500 mx-auto rounded-full"></div>
+            <div className="w-20 h-1 bg-gradient-to-r from-orange-500 to-red-500 mx-auto rounded-full"></div>
             <p className="text-gray-600 max-w-2xl mx-auto mt-4">
               What makes us India's preferred printing partner
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-6 rounded-xl bg-gradient-to-br from-red-50 to-orange-50 hover:shadow-lg transition-shadow duration-300">
+            <div className="text-center p-6 rounded-xl bg-gradient-to-br from-orange-50 to-red-50 hover:shadow-lg transition-shadow duration-300">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
-                <Truck className="w-8 h-8 text-red-500" />
+                <Truck className="w-8 h-8 text-orange-500" />
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">
                 Pan-India Delivery
@@ -995,9 +988,9 @@ function Home() {
                 Fast and reliable shipping to every corner of India
               </p>
             </div>
-            <div className="text-center p-6 rounded-xl bg-gradient-to-br from-red-50 to-orange-50 hover:shadow-lg transition-shadow duration-300">
+            <div className="text-center p-6 rounded-xl bg-gradient-to-br from-orange-50 to-red-50 hover:shadow-lg transition-shadow duration-300">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
-                <Shield className="w-8 h-8 text-red-500" />
+                <Shield className="w-8 h-8 text-orange-500" />
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">
                 Quality Guaranteed
@@ -1006,9 +999,9 @@ function Home() {
                 100% satisfaction guarantee on all orders
               </p>
             </div>
-            <div className="text-center p-6 rounded-xl bg-gradient-to-br from-red-50 to-orange-50 hover:shadow-lg transition-shadow duration-300">
+            <div className="text-center p-6 rounded-xl bg-gradient-to-br from-orange-50 to-red-50 hover:shadow-lg transition-shadow duration-300">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
-                <Clock className="w-8 h-8 text-red-500" />
+                <Clock className="w-8 h-8 text-orange-500" />
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">
                 Fast Turnaround
@@ -1021,41 +1014,41 @@ function Home() {
         </div>
       </section>
 
-      {/* TESTIMONIALS SECTION - New */}
-      <section className="py-20 bg-gradient-to-br from-red-50 via-white to-orange-50">
+      {/* TESTIMONIALS SECTION */}
+      <section className="py-20 bg-gradient-to-br from-orange-50 via-white to-red-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <QuoteIcon className="w-10 h-10 text-red-400 mx-auto mb-4" />
+            <QuoteIcon className="w-10 h-10 text-orange-400 mx-auto mb-4" />
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               What Our Clients Say
             </h2>
-            <div className="w-20 h-1 bg-gradient-to-r from-red-500 to-orange-500 mx-auto rounded-full"></div>
+            <div className="w-20 h-1 bg-gradient-to-r from-orange-500 to-red-500 mx-auto rounded-full"></div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="bg-gray-800 rounded-xl p-6 hover:shadow-xl transition-shadow duration-300"
+                className="bg-white rounded-xl p-6 hover:shadow-xl transition-shadow duration-300 border border-gray-100"
               >
                 <div className="flex items-center gap-1 mb-4">
                   {[...Array(5)].map((_, j) => (
                     <Star
                       key={j}
-                      className="w-4 h-4 fill-amber-400 text-amber-400"
+                      className="w-4 h-4 fill-yellow-400 text-yellow-400"
                     />
                   ))}
                 </div>
-                <p className="text-gray-300 text-sm leading-relaxed mb-4">
+                <p className="text-gray-600 text-sm leading-relaxed mb-4">
                   "Exceptional quality and service! The team at Ravi Graphics
                   delivered our business cards within 48 hours. The print
                   quality is outstanding."
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center text-white font-bold">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center text-white font-bold">
                     RK
                   </div>
                   <div>
-                    <p className="text-white font-semibold text-sm">
+                    <p className="text-gray-800 font-semibold text-sm">
                       Rajesh Kumar
                     </p>
                     <p className="text-gray-400 text-xs">CEO, Tech Solutions</p>
@@ -1068,19 +1061,19 @@ function Home() {
       </section>
 
       {/* QUOTE BANNER */}
-      <section className="py-16 bg-gradient-to-r from-red-600 to-orange-600">
+      <section className="py-16 bg-gradient-to-r from-orange-500 to-red-500">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
               <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
                 Ready to bring your vision to life?
               </h2>
-              <p className="text-red-100">
+              <p className="text-orange-100">
                 Get a free quote today — no obligation, just expert advice
               </p>
             </div>
             <Link to="/quote">
-              <button className="px-8 py-3.5 bg-white text-red-600 font-semibold rounded-xl hover:shadow-lg transition transform hover:-translate-y-0.5 flex items-center gap-2">
+              <button className="px-8 py-3.5 bg-white text-orange-600 font-semibold rounded-xl hover:shadow-lg transition transform hover:-translate-y-0.5 flex items-center gap-2">
                 Get Free Quote <ArrowRight className="w-4 h-4" />
               </button>
             </Link>

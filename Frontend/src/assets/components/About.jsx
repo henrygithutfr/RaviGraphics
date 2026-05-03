@@ -20,6 +20,7 @@ import {
   Mail,
   MapPin
 } from "lucide-react";
+import SEO from "./SEO";
 
 export default function About() {
   const stats = [
@@ -76,6 +77,12 @@ export default function About() {
   ];
 
   return (
+    <>  
+    <SEO 
+      title="About Ravi Graphics | Printing & Graphic Design Services in Odisha"
+      description="Ravi Graphics provides professional printing and graphic design services in Odisha, including business cards, banners, brochures, posters, stickers and custom print solutions with fast turnaround."
+    />
+    
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <div className="bg-white border-b border-amber-100 pt-12 pb-12">
@@ -287,5 +294,6 @@ export default function About() {
         </div>
       </div>
     </div>
+  </>
   );
 }

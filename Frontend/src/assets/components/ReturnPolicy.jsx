@@ -1,8 +1,15 @@
 // ReturnPolicy.jsx
 import { RefreshCw, DollarSign, Calendar, CheckCircle, XCircle, AlertCircle, Clock, Mail, Phone, FileText, MessageCircle, Printer } from "lucide-react";
+import SEO from "./SEO";
+
 
 export default function ReturnPolicy() {
   return (
+    <>
+    <SEO 
+      title="Return & Refund Policy | Ravi Graphics"
+      description="Understand the return and refund policy of Ravi Graphics for printing and design services, including eligibility, conditions and support."
+    />
     <div className="bg-gray-50 min-h-screen py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -237,5 +244,6 @@ export default function ReturnPolicy() {
         </div>
       </div>
     </div>
+    </>
   );
 }

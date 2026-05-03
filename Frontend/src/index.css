@@ -1,6 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Allura&family=Dancing+Script&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@400;600;700&family=Montserrat:wght@400;700&family=Playfair+Display:wght@400;700&display=swap');
 @import "tailwindcss";
+@import "tailwindcss";
+
 * {
   font-family: 'Inter', sans-serif;
+}
+
+.calibri-font {
+  font-family: 'Calibri', sans-serif;
+}
+
+.font-great-vibes {
+  font-family: 'Great Vibes', cursive;
+}
+
+.font-vibes { font-family: 'Great Vibes', cursive; }
+.font-modern { font-family: 'Poppins', sans-serif; }
+.font-bold-modern { font-family: 'Montserrat', sans-serif; }
+.font-elegant { font-family: 'Playfair Display', serif; }
+
+.word-animate {
+  display: inline-block;
+  transition: all 0.4s ease;
+}
+
+.word-animate:hover {
+  transform: translateY(-3px) scale(1.05);
+}
+
+:root {
+  --primary-orange: #FF5A1F;
+  --primary-purple: #6A1B9A;
+
+  --secondary-pink: #E91E63;
+  --secondary-blue: #2979FF;
+
+  --accent-yellow: #FFB300; /* DO NOT use for text */
+
+  --text-dark: #1A1A1A;
+  --bg-light: #F5EFE6;
+}
+
+.text-orange { color: var(--primary-orange); }
+.text-purple { color: var(--primary-purple); }
+.text-pink { color: var(--secondary-pink); }
+.text-blue { color: var(--secondary-blue); }
+
+.bg-main { background: var(--bg-light); }
+.text-main { color: var(--text-dark); }
+
+.font-vibes { font-family: 'Great Vibes', cursive; }
+.font-modern { font-family: 'Poppins', sans-serif; }
+.font-bold-modern { font-family: 'Montserrat', sans-serif; }
+.font-elegant { font-family: 'Playfair Display', serif; }
+
+.word-animate {
+  display: inline-block;
 }
 
 /* Hide scrollbar */

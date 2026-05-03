@@ -9,6 +9,7 @@ import {
   Sun,
   Loader
 } from "lucide-react";
+import SEO from "./SEO";
 
 const Services = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -107,6 +108,11 @@ const Services = () => {
   }
 
   return (
+    <>
+    <SEO 
+      title="Our Printing Services - Business Cards to Banners"
+      description="Explore our wide range of printing services. Business cards, brochures, banners, packaging, and custom designs. Quality guaranteed. Free quote available."
+    />
     <div className="min-h-screen bg-gray-50">
       
       {/* Hero Section */}
@@ -281,6 +287,7 @@ const Services = () => {
       </div>
       
     </div>
+    </>
   );
 };
 

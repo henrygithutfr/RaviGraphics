@@ -4,6 +4,7 @@ export default {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
         heading: ['Poppins', 'sans-serif'],
+        vibes: ['"Great Vibes"', 'cursive'],
       },
     },
   },

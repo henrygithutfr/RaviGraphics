@@ -1,8 +1,14 @@
 // TermsConditions.jsx
 import { FileText, Scale, CreditCard, RefreshCw, AlertTriangle, Shield, Clock, Mail, Phone, Printer, Download } from "lucide-react";
+import SEO from "./SEO";
 
 export default function TermsConditions() {
   return (
+    <>
+    <SEO 
+      title="Terms & Conditions | Ravi Graphics"
+      description="Review the terms and conditions of Ravi Graphics for using our printing and graphic design services, including orders, payments and service policies."
+    />
     <div className="bg-gray-50 min-h-screen py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -176,5 +182,6 @@ export default function TermsConditions() {
         </div>
       </div>
     </div>
+    </>
   );
 }

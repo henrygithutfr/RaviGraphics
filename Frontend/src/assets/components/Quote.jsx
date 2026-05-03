@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
+import SEO from "./SEO";
 
 function Quote() {
   const navigate = useNavigate();
@@ -353,6 +354,12 @@ function Quote() {
   };
 
   return (
+    <>
+    <SEO 
+      title="Request a Quote for Printing & Design | Ravi Graphics"
+      description="Request a custom quote for printing and graphic design services in Odisha. Get pricing for business cards, banners, brochures, posters and bulk printing with fast response."
+    />
+       
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 pt-12 pb-8">
@@ -990,6 +997,7 @@ function Quote() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
