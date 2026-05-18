@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+const API = import.meta.env.VITE_API_URL;
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -45,7 +46,7 @@ export default function AdminDashboard() {
   const fetchStats = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("http://localhost:4001/api/admin/stats", {
+      const response = await axios.get(`${API}/api/admin/stats`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
         },

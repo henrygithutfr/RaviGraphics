@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+const API = import.meta.env.VITE_API_URL;
 import {
   ChevronLeft,
   ShoppingCart,
@@ -129,7 +130,7 @@ export default function ProductPage() {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:4001/api/services");
+        const response = await axios.get(`${API}/api/services`);
         const allServices = response.data;
         const foundCategory = allServices.find(
           (cat) => cat.slug === categorySlug,
@@ -316,7 +317,7 @@ export default function ProductPage() {
 
       try {
         const response = await axios.post(
-          "http://localhost:4001/api/upload/file",
+          `${API}/api/upload/file`,
           formData,
           {
             headers: { "Content-Type": "multipart/form-data" },
@@ -380,7 +381,7 @@ export default function ProductPage() {
       }
 
       const razorpayOrderResponse = await axios.post(
-        "http://localhost:4001/api/payments/create-order",
+        `${API}/api/payments/create-order`,
         {
           amount: createdOrder.totalAmount,
           orderId: createdOrder._id,
@@ -399,7 +400,7 @@ export default function ProductPage() {
         order_id: razorpayOrderResponse.data.orderId,
         handler: async (response) => {
           await axios.post(
-            "http://localhost:4001/api/payments/verify-payment",
+            `${API}/api/payments/verify-payment`,
             {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -484,7 +485,7 @@ export default function ProductPage() {
 
     try {
       const response = await axios.post(
-        "http://localhost:4001/api/orders/create",
+        `${API}/api/orders/create`,
         orderPayload,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -538,7 +539,7 @@ export default function ProductPage() {
 
     try {
       await axios.post(
-        "http://localhost:4001/api/quotes/create",
+        `${API}/api/quotes/create`,
         quotePayload,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -590,7 +591,7 @@ export default function ProductPage() {
 
     try {
       await axios.post(
-        "http://localhost:4001/api/quotes/create",
+        `${API}/api/quotes/create`,
         quotePayload,
         {
           headers: { Authorization: `Bearer ${token}` },

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Plus, Edit, Trash2, Eye } from "lucide-react";
+const API = import.meta.env.VITE_API_URL;
 
 export default function AdminProducts() {
     const navigate = useNavigate();
@@ -60,7 +61,7 @@ export default function AdminProducts() {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get("http://localhost:4001/api/services");
+      const response = await axios.get(`${API}/api/services`);
       setCategories(response.data);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -102,14 +103,14 @@ export default function AdminProducts() {
 
       if (editingProduct) {
         const response = await axios.put(
-          `http://localhost:4001/api/admin/products/${editingProduct.id}`, 
+          `${API}/api/admin/products/${editingProduct.id}`, 
           payload,
           { headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` } }
         );
         console.log("Update response:", response.data);
       } else {
         const response = await axios.post(
-          "http://localhost:4001/api/admin/products", 
+          `${API}/api/admin/products`, 
           payload,
           { headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` } }
         );
@@ -130,7 +131,7 @@ export default function AdminProducts() {
   const handleDelete = async (productId) => {
     if (confirm("Are you sure you want to delete this product?")) {
       try {
-        await axios.delete(`http://localhost:4001/api/admin/products/${selectedCategory._id}/${productId}`, {
+        await axios.delete(`${API}/api/admin/products/${selectedCategory._id}/${productId}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` }
         });
         fetchCategories();
@@ -149,7 +150,7 @@ export default function AdminProducts() {
         price_do: newPrice ? parseInt(newPrice) : 0
       };
       
-      await axios.put(`http://localhost:4001/api/admin/services/${selectedCategory._id}`, updatedCategory, {
+      await axios.put(`${API}/api/admin/services/${selectedCategory._id}`, updatedCategory, {
         headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` }
       });
       

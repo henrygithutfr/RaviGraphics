@@ -21,6 +21,7 @@ import {
   MapPin
 } from "lucide-react";
 import axios from "axios";
+const API = import.meta.env.VITE_API_URL;
 
 export default function Checkout() {
   const { user, cartItems, getCartTotal, clearCart } = useAuth();
@@ -131,7 +132,7 @@ export default function Checkout() {
     };
 
     try {
-      const response = await axios.post("https://localhost:4001/api/orders/create", orderPayload, {
+      const response = await axios.post(`${API}/api/orders/create`, orderPayload, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
 
@@ -151,7 +152,7 @@ export default function Checkout() {
 
   const handlePaymentConfirm = async () => {
     try {
-      const response = await axios.post(`https://localhost:4001/api/orders/${orderData._id}/payment`, {
+      const response = await axios.post(`${API}/api/orders/${orderData._id}/payment`, {
         paymentMethod: paymentMethod,
         transactionId: `TXN_${Date.now()}`
       }, {

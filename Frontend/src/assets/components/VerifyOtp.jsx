@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { CheckCircle, XCircle, Loader2, Mail, ArrowLeft } from "lucide-react";
+const API = import.meta.env.VITE_API_URL;
 
 export default function VerifyOTP({ email, onBack, onVerified }) {
   const [otp, setOtp] = useState("");
@@ -21,7 +22,7 @@ export default function VerifyOTP({ email, onBack, onVerified }) {
     setError("");
 
     try {
-      const response = await axios.post("http://localhost:4001/api/auth/verify-otp", {
+      const response = await axios.post(`${API}/api/auth/verify-otp`, {
         email,
         otp
       });

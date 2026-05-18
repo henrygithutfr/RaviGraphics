@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
+const API = import.meta.env.VITE_API_URL;
 
 export default function AuthModal() {
   const {
@@ -84,7 +85,7 @@ export default function AuthModal() {
 
     try {
       const response = await axios.post(
-        "http://localhost:4001/api/auth/verify-otp",
+        `${API}/api/auth/verify-otp`,
         {
           email: pendingEmail,
           otp: otpCode,
@@ -116,7 +117,7 @@ export default function AuthModal() {
     setOtpError("");
 
     try {
-      await axios.post("http://localhost:4001/api/auth/resend-verification", {
+      await axios.post(`${API}/api/auth/resend-verification`, {
         email: pendingEmail,
       });
       alert("New verification code sent to your email!");

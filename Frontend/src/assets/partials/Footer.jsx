@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Phone, Mail, MapPin, ArrowRight, Heart } from "lucide-react";
 import { FaFacebook, FaInstagram } from "react-icons/fa";
 import axios from "axios";
+const API = import.meta.env.VITE_API_URL;
 // import Logo from "../logo-white.png";
 import Logo from "../../assets/logo.png";
 
@@ -14,7 +15,7 @@ export default function Footer() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await axios.get("http://localhost:4001/api/services");
+        const response = await axios.get(`${API}/api/services`);
         setCategories(response.data);
         console.log(
           "✅ Footer - Services fetched from MongoDB:",

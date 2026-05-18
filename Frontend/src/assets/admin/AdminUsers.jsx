@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { User, Mail, Phone, Calendar, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+const API = import.meta.env.VITE_API_URL;
 
 export default function AdminUsers() {
     const navigate = useNavigate();
@@ -24,7 +25,7 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:4001/api/admin/users", {
+      const response = await axios.get(`${API}/api/admin/users`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` }
       });
       setUsers(response.data.users);

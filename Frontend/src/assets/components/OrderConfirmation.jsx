@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { CheckCircle, Package, Truck, Clock, Printer, Download, Share2 } from "lucide-react";
+const API = import.meta.env.VITE_API_URL;
 
 export default function OrderConfirmation() {
   const { orderId } = useParams();
@@ -11,7 +12,7 @@ export default function OrderConfirmation() {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const response = await axios.get(`http://localhost:4001/api/orders/${orderId}`, {
+        const response = await axios.get(`${API}/api/orders/${orderId}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         setOrder(response.data.order);

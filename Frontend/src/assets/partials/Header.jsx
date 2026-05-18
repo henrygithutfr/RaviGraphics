@@ -16,6 +16,7 @@ import axios from "axios";
 import Logo from "../../assets/logo.png";
 import { useAuth } from "../../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
+const API = import.meta.env.VITE_API_URL;
 
 const quickLinks = [
   { name: "Home", href: "/" },
@@ -78,7 +79,7 @@ export default function Header() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await axios.get("http://localhost:4001/api/services");
+        const response = await axios.get(`${API}/api/services`);
         setCategories(response.data);
         console.log(
           "✅ Services fetched from MongoDB:",

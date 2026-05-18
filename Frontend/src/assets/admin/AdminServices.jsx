@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Plus, Edit, Trash2, Eye, ChevronDown, ChevronUp } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+const API = import.meta.env.VITE_API_URL;
 
 export default function AdminServices() {
     const navigate = useNavigate();
@@ -34,7 +35,7 @@ export default function AdminServices() {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get("http://localhost:4001/api/services");
+      const response = await axios.get(`${API}/api/services`);
       setCategories(response.data);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -52,11 +53,11 @@ export default function AdminServices() {
       };
       
       if (editingCategory) {
-        await axios.put(`http://localhost:4001/api/admin/services/${editingCategory._id}`, payload, {
+        await axios.put(`${API}/api/admin/services/${editingCategory._id}`, payload, {
           headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` }
         });
       } else {
-        await axios.post("http://localhost:4001/api/admin/services", payload, {
+        await axios.post(`${API}/api/admin/services`, payload, {
           headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` }
         });
       }
@@ -72,7 +73,7 @@ export default function AdminServices() {
   const handleDelete = async (id) => {
     if (confirm("Are you sure you want to delete this category?")) {
       try {
-        await axios.delete(`http://localhost:4001/api/admin/services/${id}`, {
+        await axios.delete(`${API}/api/admin/services/${id}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` }
         });
         fetchCategories();

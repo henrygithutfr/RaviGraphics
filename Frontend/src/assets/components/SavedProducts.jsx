@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Heart, Trash2, ShoppingCart, AlertCircle } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
+const API = import.meta.env.VITE_API_URL;
 
 export default function SavedProducts() {
   const { user, savedProducts, toggleSaveProduct, openAuthModal } = useAuth();
@@ -14,7 +15,7 @@ export default function SavedProducts() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await axios.get('http://localhost:4001/api/services');
+        const response = await axios.get(`${API}/api/services`);
         setAllServices(response.data);
       } catch (error) {
         console.error("Error fetching services:", error);

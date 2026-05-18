@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+const API = import.meta.env.VITE_API_URL;
 import { 
   Eye, 
   Package, 
@@ -52,7 +53,7 @@ export default function AdminOrders() {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get("http://localhost:4001/api/admin/orders", {
+      const response = await axios.get(`${API}/api/admin/orders`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` }
       });
       setOrders(response.data.orders);
@@ -65,7 +66,7 @@ export default function AdminOrders() {
 
   const updateOrderStatus = async (orderId, status) => {
     try {
-      await axios.put(`http://localhost:4001/api/admin/orders/${orderId}/status`,
+      await axios.put(`${API}/api/admin/orders/${orderId}/status`,
         { status },
         { headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` } }
       );
@@ -78,7 +79,7 @@ export default function AdminOrders() {
   // Delete order function
   const deleteOrder = async (orderId) => {
     try {
-      await axios.delete(`http://localhost:4001/api/admin/orders/${orderId}`, {
+      await axios.delete(`${API}/api/admin/orders/${orderId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` }
       });
       fetchOrders();

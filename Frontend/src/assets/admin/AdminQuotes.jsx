@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+const API = import.meta.env.VITE_API_URL;
 import { 
   Eye, 
   CheckCircle, 
@@ -48,7 +49,7 @@ export default function AdminQuotes() {
 
   const fetchQuotes = async () => {
     try {
-      const response = await axios.get("http://localhost:4001/api/admin/quotes", {
+      const response = await axios.get(`${API}/api/admin/quotes`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` }
       });
       setQuotes(response.data.quotes);
@@ -61,7 +62,7 @@ export default function AdminQuotes() {
 
   const updateQuoteStatus = async () => {
     try {
-      await axios.put(`http://localhost:4001/api/admin/quotes/${statusUpdate.quoteId}/status`, 
+      await axios.put(`${API}/api/admin/quotes/${statusUpdate.quoteId}/status`, 
         {
           status: statusUpdate.status,
           quotedAmount: statusUpdate.quotedAmount,

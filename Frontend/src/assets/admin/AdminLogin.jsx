@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, Mail, Shield } from "lucide-react";
 import axios from "axios";
+const API = import.meta.env.VITE_API_URL;
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ export default function AdminLogin() {
     setError("");
 
     try {
-      const response = await axios.post("http://localhost:4001/api/admin/login", formData);
+      const response = await axios.post(`${API}/api/admin/login`, formData);
       if (response.data.success) {
         localStorage.setItem("adminToken", response.data.token);
         localStorage.setItem("admin", JSON.stringify(response.data.admin));

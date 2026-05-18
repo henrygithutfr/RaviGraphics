@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Package, Eye, Truck, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+const API = import.meta.env.VITE_API_URL;
 
 export default function MyOrders() {
   const { user, openAuthModal } = useAuth();
@@ -21,7 +22,7 @@ export default function MyOrders() {
 
     const fetchOrders = async () => {
       try {
-        const response = await axios.get("http://localhost:4001/api/orders/my-orders", {
+        const response = await axios.get(`${API}/api/orders/my-orders`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setOrders(response.data.orders || []);
