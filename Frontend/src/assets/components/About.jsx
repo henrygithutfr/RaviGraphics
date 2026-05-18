@@ -141,9 +141,14 @@ export default function About() {
             </div>
           </div>
           
-          <div className="bg-gradient-to-br from-orange-100 to-amber-100 rounded-2xl p-8 flex items-center justify-center">
+          <div className="rounded-2xl flex items-center justify-center">
             <div className="text-center">
-              <Printer className="w-20 h-20 text-orange-600 mx-auto mb-4" />
+              <img 
+      src="https://i.ibb.co/qL0jbcPN/Shop.webp" 
+      alt="Ravi Graphics Office" 
+      className="rounded-lg max-w-full h-auto mb-4"
+      loading="lazy"
+    />
               <p className="text-orange-800 font-medium italic">
                 "Quality is not an act, it's a habit."
               </p>
