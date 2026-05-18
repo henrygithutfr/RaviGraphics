@@ -16,10 +16,12 @@ export default function Footer() {
     const fetchServices = async () => {
       try {
         const response = await axios.get(`${API}/api/services`);
-        setCategories(response.data);
+        // Ensure response.data is an array
+        const data = Array.isArray(response.data) ? response.data : [];
+        setCategories(data);
         console.log(
           "✅ Footer - Services fetched from MongoDB:",
-          response.data.length,
+          data.length,
           "categories",
         );
       } catch (error) {
@@ -33,13 +35,15 @@ export default function Footer() {
     fetchServices();
   }, []);
 
-  // Get first 6 categories for quick links
-  const quickCategories = categories.slice(0, 6);
+  // Safely get first 6 categories for quick links
+  const quickCategories = Array.isArray(categories) ? categories.slice(0, 6) : [];
 
-  // Get first 6 services from all categories for popular services
-  const popularServices = categories
-    .flatMap((cat) => cat.services || [])
-    .slice(0, 6);
+  // Safely get first 6 services from all categories for popular services
+  const popularServices = Array.isArray(categories) 
+    ? categories
+        .flatMap((cat) => cat?.services || [])
+        .slice(0, 6)
+    : [];
 
   // Helper function to get service URL
   const getServiceUrl = (categorySlug, serviceSlug) => {
