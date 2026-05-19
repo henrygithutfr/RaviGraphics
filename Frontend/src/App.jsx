@@ -1,132 +1,70 @@
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
-import { HelmetProvider } from "react-helmet-async"; // Add this import
-import ScrollToTop from "./assets/components/ScrollToTop";
-import { AuthProvider } from "./context/AuthContext";
-import Header from "./assets/partials/Header";
-import Home from "./assets/components/Home";
-import About from "./assets/components/About";
-import Quote from "./assets/components/Quote";
-import Footer from "./assets/partials/Footer";
-import Services from "./assets/components/Services";
-import CategoryPage from "./assets/components/CategoryPage";
-import ProductPage from "./assets/components/ProductPage";
-import Contact from "./assets/components/Contact";
-import AuthModal from "./assets/components/AuthModal";
-import SavedProducts from "./assets/components/SavedProducts";
-import Checkout from "./assets/components/Checkout";
-import OrderConfirmation from "./assets/components/OrderConfirmation";
-import MyOrders from "./assets/components/MyOrders";
-import ProtectedRoute from "./assets/components/ProtectedRoute";
-import VerifyEmail from "./assets/components/VerifyEmail";
+import React from 'react';
 
-// Policy Pages
-import PrivacyPolicy from "./assets/components/PrivacyPolicy";
-import TermsConditions from "./assets/components/TermsConditions";
-import ShippingPolicy from "./assets/components/ShippingPolicy";
-import ReturnPolicy from "./assets/components/ReturnPolicy";
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
 
-// Admin imports
-import AdminLogin from "./assets/admin/AdminLogin";
-import AdminDashboard from "./assets/admin/AdminDashboard";
-import AdminOrders from "./assets/admin/AdminOrders";
-import AdminQuotes from "./assets/admin/AdminQuotes";
-import AdminServices from "./assets/admin/AdminServices";
-import AdminProducts from "./assets/admin/AdminProducts";
-import AdminUsers from "./assets/admin/AdminUsers";
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
 
-function Layout() {
-  return (
-    <>
-      <Header />
-      <Outlet />
-      <Footer />
-      <AuthModal />
-    </>
-  );
+  componentDidCatch(error, errorInfo) {
+    console.error('🔴 ErrorBoundary caught an error:', error);
+    console.error('Component stack:', errorInfo.componentStack);
+    this.setState({ errorInfo });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      // Log to console for debugging
+      console.error('Error details:', {
+        message: this.state.error?.message,
+        stack: this.state.error?.stack,
+      });
+
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+          <div className="text-center max-w-md">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              Something went wrong
+            </h2>
+            <p className="text-gray-600 mb-4">
+              {this.state.error?.message || 'An unexpected error occurred'}
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+              >
+                Reload Page
+              </button>
+              <button
+                onClick={() => window.location.href = '/'}
+                className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Go to Homepage
+              </button>
+            </div>
+            {process.env.NODE_ENV === 'development' && (
+              <details className="mt-6 text-left bg-gray-100 p-4 rounded-lg overflow-auto">
+                <summary className="cursor-pointer font-mono text-sm text-gray-600">
+                  Error Details (Development only)
+                </summary>
+                <pre className="mt-2 text-xs text-red-600 whitespace-pre-wrap">
+                  {this.state.error?.stack}
+                </pre>
+              </details>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
 }
 
-function App() {
-  return (
-    <HelmetProvider> {/* Wrap everything with HelmetProvider */}
-      <AuthProvider>
-        <BrowserRouter>
-          <ScrollToTop />
-          <Routes>
-            <Route path="/verify-email" element={<VerifyEmail />} />
-            {/* Public Routes - No login required */}
-            <Route element={<Layout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/services/:categorySlug" element={<CategoryPage />} />
-              <Route path="/services/:categorySlug/:productSlug" element={<ProductPage />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/quote" element={<Quote />} />
-              
-              {/* Policy Pages */}
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-conditions" element={<TermsConditions />} />
-              <Route path="/shipping-policy" element={<ShippingPolicy />} />
-              <Route path="/return-policy" element={<ReturnPolicy />} />
-              
-              {/* Protected Customer Routes - Require Login */}
-              <Route path="/saved-products" element={
-                <ProtectedRoute>
-                  <SavedProducts />
-                </ProtectedRoute>
-              } />
-              <Route path="/order-confirmation/:orderId" element={
-                <ProtectedRoute>
-                  <OrderConfirmation />
-                </ProtectedRoute>
-              } />
-              <Route path="/my-orders" element={
-                <ProtectedRoute>
-                  <MyOrders />
-                </ProtectedRoute>
-              } />
-            </Route>
-            
-            {/* Admin Routes - Require Admin Login */}
-            <Route path="/admin" element={<AdminLogin />} />
-            <Route path="/admin/dashboard" element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/orders" element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminOrders />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/quotes" element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminQuotes />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/services" element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminServices />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/products" element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminProducts />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/users" element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminUsers />
-              </ProtectedRoute>
-            } />
-            
-            {/* 404 */}
-            <Route path="*" element={<h1 className="text-center text-2xl py-20">404 - Page Not Found</h1>} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </HelmetProvider>
-  );
-}
-
-export default App;
+export default ErrorBoundary;
