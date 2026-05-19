@@ -54,7 +54,35 @@ const app = express();
 //   allowedHeaders: ["Content-Type", "Authorization"]
 // }));
 
-app.use(cors())
+const allowedOrigins = [
+  'https://ravigraphics.vercel.app', 
+  'https://ravigraphics.onrender.com', // Your main Vercel app
+  'http://localhost:5173',             // Local development
+  'http://localhost:4001'
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman, curl)
+    if (!origin) return callback(null, true);
+    
+    // Allow any Vercel preview deployment (has .vercel.app in the URL)
+    if (origin.includes('.vercel.app')) {
+      return callback(null, true);
+    }
+    
+    // Check against allowed origins list
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Blocked CORS from:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
