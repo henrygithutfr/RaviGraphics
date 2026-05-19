@@ -35,7 +35,6 @@ const generateOTP = () => {
 
 // Send verification email with OTP - FIXED with IPv4
 const sendVerificationEmail = async (email, name, otp) => {
-  // Force IPv4 to avoid Render's IPv6 timeout issues
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
@@ -44,36 +43,30 @@ const sendVerificationEmail = async (email, name, otp) => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
     },
-    family: 4,  // FORCE IPv4 - CRITICAL for Render
+    family: 4,
     connectionTimeout: 15000,
-    socketTimeout: 15000
+    socketTimeout: 15000,
+    tls: {
+      rejectUnauthorized: false  // Add this
+    },
+    debug: true  // Add this to see more details in logs
   });
   
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px;">
-      <div style="text-align: center; margin-bottom: 20px;">
-        <h2 style="color: #ea580c;">Ravi Graphics</h2>
-      </div>
-      <h2 style="color: #ea580c;">Email Verification</h2>
-      <p>Dear ${name},</p>
-      <p>Thank you for signing up! Please use the verification code below:</p>
-      <div style="text-align: center; margin: 30px 0;">
-        <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #ea580c; background-color: #fef3c7; padding: 15px; border-radius: 10px; display: inline-block;">
-          ${otp}
-        </div>
-      </div>
-      <p>This code expires in 10 minutes.</p>
-      <hr style="margin: 20px 0;">
-      <p style="color: #6b7280; font-size: 12px;">Ravi Graphics — Where Quality Meets Excellence ☀️</p>
-    </div>
-  `;
-
-  await transporter.sendMail({
+  const mailOptions = {
     from: `"Ravi Graphics" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: "Verify Your Email - Ravi Graphics",
-    html
-  });
+    html: `... your html ...`
+  };
+  
+  // Add this to see more details
+  console.log("Attempting to send email to:", email);
+  
+  const info = await transporter.sendMail(mailOptions);
+  console.log("Email sent:", info.messageId);
+  console.log("Response:", info.response);
+  
+  return info;
 };
 
 // STEP 1: Signup - Send verification code to email
