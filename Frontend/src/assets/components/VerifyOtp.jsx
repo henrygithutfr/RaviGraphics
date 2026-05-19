@@ -50,7 +50,7 @@ export default function VerifyOTP({ email, onBack, onVerified }) {
     setError("");
     
     try {
-      await axios.post("http://localhost:4001/api/auth/resend-verification", { email });
+      await axios.post(`${API}/api/auth/resend-verification`, { email });
       alert("New verification code sent to your email!");
     } catch (err) {
       setError(err.response?.data?.error || "Failed to resend code. Please try again.");
