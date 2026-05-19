@@ -43,6 +43,7 @@ import {
   Handshake,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+const API = import.meta.env.VITE_API_URL;
 
 function Home() {
   const { toggleSaveProduct, isProductSaved, openAuthModal } = useAuth();
@@ -86,7 +87,7 @@ function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("/api/services");
+        const response = await axios.get(`${API}/api/services`);
         setServices(response.data);
 
         const portfolio = [];

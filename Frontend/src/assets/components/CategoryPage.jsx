@@ -4,6 +4,7 @@ import axios from "axios";
 import { Sparkles, AlertCircle, Settings, CheckCircle2, Heart } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import SEO from "./SEO";
+const API = import.meta.env.VITE_API_URL;
 
 export default function CategoryPage() {
   const { categorySlug } = useParams();
@@ -17,7 +18,7 @@ export default function CategoryPage() {
     const fetchCategory = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/api/services');
+        const response = await axios.get(`${API}/api/services`);
         const allServices = response.data;
         const foundCategory = allServices.find(cat => cat.slug === categorySlug);
         

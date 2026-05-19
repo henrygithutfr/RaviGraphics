@@ -21,6 +21,7 @@ import {
   LogIn
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext"; // Adjust the import path as needed
+const API = import.meta.env.VITE_API_URL;
 
 export default function Contact() {
   const { user, openAuthModal } = useAuth(); // Add this line to get auth functions
@@ -94,7 +95,7 @@ export default function Contact() {
     try {
       // Using EmailJS or a backend endpoint
       // Option 1: Send to your backend (recommended)
-      const response = await axios.post('/api/contact', {
+      const response = await axios.post(`${API}/api/contact`, {
         name: formData.name,
         email: formData.email,
         message: formData.message,
