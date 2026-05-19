@@ -5,6 +5,9 @@ import App from './App.jsx'
 
 import axios from 'axios';
 axios.defaults.withCredentials = true;
+axios.get(url, {
+  withCredentials: true
+});
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
