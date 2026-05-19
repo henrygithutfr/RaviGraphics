@@ -323,6 +323,15 @@ export default function Header() {
     }
   };
 
+  // Get logo width based on screen size
+    const getLogoWidth = () => {
+    if (windowWidth < 480) return "w-[150px]";  // Very small phones
+    if (windowWidth < 640) return "w-[170px]";  // Small phones
+    if (windowWidth < 768) return "w-[180px]";  // Large phones
+    if (windowWidth < 1024) return "w-[200px]"; // Tablets
+    return "w-[200px]";                         // Desktop
+  };
+
   return (
     <header className="w-full bg-white sticky top-0 z-50 border-b border-gray-100">
       {/* Top bar - Professional subtle */}
@@ -345,12 +354,16 @@ export default function Header() {
       </div>
 
       {/* Main Navbar */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6">
-        <div className="flex items-center justify-between h-16 md:h-20 gap-4">
-          {/* Logo */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+        <div className="flex items-center justify-between h-14 sm:h-16 md:h-20 gap-2 sm:gap-4">
+          {/* Logo - Responsive sizing */}
           <div className="flex items-center shrink-0">
             <Link to="/" className="flex items-center gap-2 group">
-              <img src={Logo} alt="logo" className="w-[200px] h-auto" />
+              <img 
+                src={Logo} 
+                alt="logo" 
+                className={`${getLogoWidth()} h-auto transition-all duration-300`}
+              />
             </Link>
           </div>
 
@@ -441,52 +454,52 @@ export default function Header() {
             )}
           </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6">
+          {/* Desktop Navigation Links - Hide on smaller screens */}
+          <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
             {quickLinks.map((link) => (
               <Link
                 key={link.name}
                 to={link.href}
-                className="text-sm font-medium text-gray-600 hover:text-orange-500 transition-colors"
+                className="text-sm font-medium text-gray-600 hover:text-orange-500 transition-colors whitespace-nowrap"
               >
                 {link.name}
               </Link>
             ))}
             <Link to="/quote">
-              <button className="cursor-pointer px-5 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg flex items-center gap-2 font-medium text-sm hover:shadow-md transition-shadow">
+              <button className="cursor-pointer px-4 xl:px-5 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg flex items-center gap-2 font-medium text-sm hover:shadow-md transition-shadow whitespace-nowrap">
                 Get Quote
               </button>
             </Link>
           </nav>
 
           {/* Desktop Right Icons */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-0.5 sm:gap-1">
             {/* Saved Products */}
             <button
               onClick={handleSavedProductsClick}
-              className="relative p-2 text-gray-500 hover:text-orange-500 transition-colors rounded-lg hover:bg-gray-50"
+              className="relative p-1.5 sm:p-2 text-gray-500 hover:text-orange-500 transition-colors rounded-lg hover:bg-gray-50"
               aria-label="Saved Items"
             >
-              <Heart size={20} />
+              <Heart size={18} className="sm:w-5 sm:h-5" />
               {user && savedProducts.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[9px] sm:text-[10px] rounded-full w-3.5 h-3.5 sm:w-4 sm:h-4 flex items-center justify-center">
                   {savedProducts.length}
                 </span>
               )}
             </button>
 
             {/* User Login/Profile */}
-            <div className="relative ml-1" ref={userMenuRef}>
+            <div className="relative ml-0.5 sm:ml-1" ref={userMenuRef}>
               {user ? (
                 <>
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 p-2 text-gray-500 hover:text-orange-500 transition-colors rounded-lg hover:bg-gray-50"
+                    className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 text-gray-500 hover:text-orange-500 transition-colors rounded-lg hover:bg-gray-50"
                   >
-                    <User size={20} />
+                    <User size={18} className="sm:w-5 sm:h-5" />
                     <ChevronDown
-                      size={14}
-                      className={`transition-transform ${showUserMenu ? "rotate-180" : ""}`}
+                      size={12}
+                      className={`transition-transform hidden sm:block ${showUserMenu ? "rotate-180" : ""}`}
                     />
                   </button>
                   {showUserMenu && (
@@ -523,23 +536,23 @@ export default function Header() {
               ) : (
                 <button
                   onClick={() => openAuthModal("login")}
-                  className="flex items-center gap-2 p-2 text-gray-500 hover:text-orange-500 transition-colors rounded-lg hover:bg-gray-50"
+                  className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 text-gray-500 hover:text-orange-500 transition-colors rounded-lg hover:bg-gray-50"
                 >
-                  <User size={20} />
-                  <span className="text-sm font-medium hidden lg:inline">Sign In</span>
+                  <User size={18} className="sm:w-5 sm:h-5" />
+                  <span className="text-xs sm:text-sm font-medium hidden xl:inline">Sign In</span>
                 </button>
               )}
             </div>
           </div>
 
           {/* Mobile Menu Buttons */}
-          <div className="flex items-center gap-1 md:hidden">
+          <div className="flex items-center gap-0.5 md:hidden">
             <button
               onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
               className="p-2 text-gray-600 rounded-lg hover:bg-gray-50"
               aria-label="Search"
             >
-              <Search size={20} />
+              <Search size={18} />
             </button>
 
             <button
@@ -547,9 +560,9 @@ export default function Header() {
               className="relative p-2 text-gray-600 rounded-lg hover:bg-gray-50"
               aria-label="Saved Items"
             >
-              <Heart size={20} />
+              <Heart size={18} />
               {user && savedProducts.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[9px] rounded-full w-3.5 h-3.5 flex items-center justify-center">
                   {savedProducts.length}
                 </span>
               )}
@@ -562,7 +575,7 @@ export default function Header() {
                   className="p-2 text-gray-600 rounded-lg hover:bg-gray-50"
                   aria-label="User Menu"
                 >
-                  <User size={20} />
+                  <User size={18} />
                 </button>
               </div>
             ) : (
@@ -571,7 +584,7 @@ export default function Header() {
                 className="p-2 text-gray-600 rounded-lg hover:bg-gray-50"
                 aria-label="Login"
               >
-                <User size={20} />
+                <User size={18} />
               </button>
             )}
 
@@ -580,7 +593,7 @@ export default function Header() {
               className="p-2 -mr-1 text-gray-600 rounded-lg hover:bg-gray-50"
               aria-label="Toggle menu"
             >
-              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
@@ -656,14 +669,14 @@ export default function Header() {
       {/* Mega Dropdown Navbar - Professional */}
       <div className="hidden md:block bg-white border-t border-gray-100">
         <div className="relative">
-          <div className="flex items-center gap-1 overflow-x-auto px-6 max-w-7xl mx-auto">
+          <div className="flex items-center gap-1 overflow-x-auto px-4 md:px-6 max-w-7xl mx-auto">
             <div
               onMouseEnter={() => handleMouseEnter("Services")}
               onMouseLeave={handleMouseLeave}
               className="relative shrink-0"
             >
               <a
-                className={`flex items-center gap-1.5 px-5 py-3 text-sm font-medium transition-colors whitespace-nowrap rounded-lg cursor-default ${
+                className={`flex items-center gap-1.5 px-4 md:px-5 py-3 text-sm font-medium transition-colors whitespace-nowrap rounded-lg cursor-default ${
                   activeMega === "Services" 
                     ? "text-orange-600 bg-orange-50" 
                     : "text-gray-600 hover:text-orange-500 hover:bg-gray-50"
@@ -699,9 +712,9 @@ export default function Header() {
                         No services available
                       </div>
                     ) : (
-                      <div className="px-6 py-6 w-full">
+                      <div className="px-4 md:px-6 py-6 w-full">
                         <div
-                          className={`grid ${getGridClasses()} gap-6 w-full`}
+                          className={`grid ${getGridClasses()} gap-4 md:gap-6 w-full`}
                         >
                           {responsiveColumns.map((column, colIndex) => (
                             <div key={colIndex} className="min-w-0">
@@ -776,7 +789,7 @@ export default function Header() {
 
       {/* Mobile Menu Overlay */}
       {mobileOpen && (
-        <div className="md:hidden fixed inset-x-0 top-[calc(4rem)] bottom-0 bg-white z-40 overflow-y-auto">
+        <div className="md:hidden fixed inset-x-0 top-[calc(3.5rem)] bottom-0 bg-white z-40 overflow-y-auto">
           <div className="px-4 py-6 space-y-6">
             <div className="space-y-2">
               {quickLinks.map((link) => (
