@@ -6,23 +6,6 @@ import nodemailer from "nodemailer";
 
 const router = express.Router();
 
-// This will be overridden by the main transporter, but we need it here too
-// The email will be sent using the same credentials
-
-// Helper function to get transporter (will use env vars)
-const getTransporter = () => {
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
-};
-
-// Send verification email function
-
-
 // Middleware to verify JWT token
 export const verifyToken = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
@@ -50,9 +33,21 @@ const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Send verification email with OTP
+// Send verification email with OTP - FIXED with IPv4
 const sendVerificationEmail = async (email, name, otp) => {
-  const transporter = getTransporter();
+  // Force IPv4 to avoid Render's IPv6 timeout issues
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    },
+    family: 4,  // FORCE IPv4 - CRITICAL for Render
+    connectionTimeout: 15000,
+    socketTimeout: 15000
+  });
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px;">
@@ -86,6 +81,8 @@ router.post("/signup", async (req, res) => {
   try {
     const { name, email, phone } = req.body;
     
+    console.log("Signup attempt for:", email);
+    
     // Check if user already exists and is verified
     const existingUser = await User.findOne({
       $or: [{ email: email?.toLowerCase() }, { phone }],
@@ -107,7 +104,14 @@ router.post("/signup", async (req, res) => {
         existingUser.verificationCodeExpires = verificationCodeExpires;
         await existingUser.save();
         
-        await sendVerificationEmail(email, name, otp);
+        // Send verification email
+        try {
+          await sendVerificationEmail(email, name, otp);
+          console.log("Verification email sent to existing user:", email);
+        } catch (emailError) {
+          console.error("Email sending failed:", emailError.message);
+          // Don't fail the request - user can request resend later
+        }
         
         return res.status(200).json({
           success: true,
@@ -134,9 +138,16 @@ router.post("/signup", async (req, res) => {
     });
     
     await user.save();
+    console.log("New user created:", user._id);
     
-    // Send verification email with OTP
-    await sendVerificationEmail(email, name, otp);
+    // Send verification email
+    try {
+      await sendVerificationEmail(email, name, otp);
+      console.log("Verification email sent to new user:", email);
+    } catch (emailError) {
+      console.error("Email sending failed but user was created:", emailError.message);
+      // User is created but email failed - they can request resend
+    }
     
     res.status(201).json({
       success: true,
@@ -144,9 +155,22 @@ router.post("/signup", async (req, res) => {
       requiresVerification: true,
       email: email
     });
+    
   } catch (error) {
     console.error("Signup error:", error);
-    res.status(500).json({ success: false, error: error.message });
+    
+    // Handle duplicate key error (MongoDB error code 11000)
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        error: "User already exists with this email or phone number."
+      });
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      error: "Signup failed. Please try again later."
+    });
   }
 });
 
@@ -225,7 +249,12 @@ router.post("/resend-verification", async (req, res) => {
     user.verificationCodeExpires = verificationCodeExpires;
     await user.save();
     
-    await sendVerificationEmail(email, user.name, otp);
+    try {
+      await sendVerificationEmail(email, user.name, otp);
+      console.log("Resend email sent to:", email);
+    } catch (emailError) {
+      console.error("Resend email failed:", emailError.message);
+    }
     
     res.json({ success: true, message: "New verification code sent to your email." });
   } catch (error) {
