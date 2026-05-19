@@ -44,7 +44,13 @@ const app = express();
 //   }),
 // );
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    "https://ravi-graphics.vercel.app/",
+    "http://localhost:5173"
+  ],
+  credentials: true,  // ← Make sure this is true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
