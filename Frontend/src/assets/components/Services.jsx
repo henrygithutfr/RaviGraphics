@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import SEO from "./SEO";
 
+const API = import.meta.env.VITE_API_URL; // ← ADD THIS LINE
+
 const Services = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [services, setServices] = useState([]);
@@ -22,11 +24,16 @@ const Services = () => {
     const fetchServices = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/api/services');
-        setServices(response.data);
+        // ✅ FIX: Use API variable consistently
+        const response = await axios.get(`${API}/api/services`);
+        
+        // ✅ FIX: Ensure we have an array
+        const servicesData = Array.isArray(response.data) ? response.data : [];
+        setServices(servicesData);
       } catch (err) {
         console.error("Error fetching services:", err);
         setError("Failed to load services");
+        setServices([]); // ✅ Set empty array on error
       } finally {
         setLoading(false);
       }
@@ -35,18 +42,23 @@ const Services = () => {
     fetchServices();
   }, []);
 
-  // Get unique categories for filter
+  // ✅ FIX: Safely get categories - only if services is an array
   const categories = [
     { id: "all", label: "All Services" },
-    ...services.map(service => ({
-      id: service.slug,
-      label: service.name
-    }))
+    ...(Array.isArray(services) && services.length > 0 
+      ? services.map(service => ({
+          id: service.slug,
+          label: service.name
+        }))
+      : [])
   ];
 
-  const filteredServices = services.filter(
-    (service) => selectedCategory === "all" || service.slug === selectedCategory
-  );
+  // ✅ FIX: Safely filter services
+  const filteredServices = Array.isArray(services) 
+    ? services.filter(
+        (service) => selectedCategory === "all" || service.slug === selectedCategory
+      )
+    : [];
 
   // Helper function to get image
   const getServiceImage = (service) => {
@@ -166,7 +178,7 @@ const Services = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredServices.map((service) => (
               <Link
-                key={service.id || service.name}
+                key={service._id || service.slug || service.name}
                 to={`/services/${service.slug}`}
                 className="group bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-orange-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 block"
               >
@@ -234,7 +246,7 @@ const Services = () => {
           </div>
 
           {/* Empty state */}
-          {filteredServices.length === 0 && (
+          {filteredServices.length === 0 && !loading && (
             <div className="text-center py-16">
               <p className="text-gray-400">No services in this category yet.</p>
             </div>
