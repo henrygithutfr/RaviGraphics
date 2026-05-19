@@ -4,13 +4,6 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(),],
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:4001',
-        changeOrigin: true,
-      }
-    }
-  }
+  plugins: [react(), tailwindcss()],
+  // server proxy section removed - now using VITE_API_URL environment variable directly
 })
