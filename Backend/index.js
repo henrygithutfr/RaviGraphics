@@ -56,9 +56,7 @@ const app = express();
 
 const allowedOrigins = [
   'https://ravigraphics.vercel.app', 
-  'https://ravigraphics.onrender.com', // Your main Vercel app
-  'http://localhost:5173',             // Local development
-  'http://localhost:4001'
+  'https://ravigraphics.onrender.com'
 ];
 
 app.use(cors({
