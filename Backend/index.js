@@ -83,6 +83,10 @@ app.get("/", (req, res) => {
   res.send("Hello world from Ravi Graphics API");
 });
 
+app.get("/health", (req, res) => {
+  res.send("alive");
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/orders", orderRoutes);
@@ -90,6 +94,7 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/quotes", quoteRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/payments", paymentRoutes);
+
 
 // Contact form endpoint
 app.post("/api/contact", async (req, res) => {
