@@ -43,44 +43,11 @@ const sendVerificationEmail = async (email, name, otp) => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
-    family: 4,
+    family: 4,  // ← ADD THIS
     connectionTimeout: 15000,
     socketTimeout: 15000,
   });
-
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px;">
-      <div style="text-align: center; margin-bottom: 20px;">
-        <h2 style="color: #ea580c;">Ravi Graphics</h2>
-      </div>
-      <h2 style="color: #ea580c;">Email Verification</h2>
-      <p>Dear ${name},</p>
-      <p>Thank you for signing up! Please use the verification code below:</p>
-      <div style="text-align: center; margin: 30px 0;">
-        <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #ea580c; background-color: #fef3c7; padding: 15px; border-radius: 10px; display: inline-block;">
-          ${otp}
-        </div>
-      </div>
-      <p>This code expires in 10 minutes.</p>
-      <hr style="margin: 20px 0;">
-      <p style="color: #6b7280; font-size: 12px;">Ravi Graphics — Where Quality Meets Excellence ☀️</p>
-    </div>
-  `;
-
-  console.log("Attempting to send email to:", email);
-  console.log("OTP for testing:", otp); // Log OTP for debugging
-
-  const info = await transporter.sendMail({
-    from: `"Ravi Graphics" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: "Verify Your Email - Ravi Graphics",
-    html: html,
-  });
-  
-  console.log("Email sent:", info.messageId);
-  console.log("Response:", info.response);
-
-  return info;
+  // ... rest of the function
 };
 
 // STEP 1: Signup - Send verification code to email
