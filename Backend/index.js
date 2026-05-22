@@ -80,7 +80,7 @@ connectDB();
 // ✅ FIXED: Email configuration with explicit IPv4 settings
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465,
+  port: 587,
   secure: true,
   auth: {
     user: process.env.EMAIL_USER,
@@ -92,15 +92,6 @@ const transporter = nodemailer.createTransport({
   },
 
   connectionTimeout: 20000,
-});
-
-// Test email configuration
-transporter.verify((error, success) => {
-  if (error) {
-    console.log("❌ Email configuration error:", error.message);
-  } else {
-    console.log("✅ Email server is ready to send messages");
-  }
 });
 
 // Routes
