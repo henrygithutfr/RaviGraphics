@@ -33,7 +33,7 @@ const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Send verification email using Brevo API (NOT SMTP)
+// Send verification email using Brevo API
 const sendVerificationEmail = async (email, name, otp) => {
   try {
     console.log("📧 Attempting to send OTP to:", email);
@@ -89,92 +89,66 @@ Ravi Graphics — Where Quality Meets Excellence ☀️
   }
 };
 
-// Signup Route
+// Temporary storage for unverified users (in production, use Redis or similar)
+// For now, we'll store in memory (will reset on server restart)
+const tempUsers = new Map();
+
+// Signup Route - ONLY stores temporarily, does NOT save to DB
 router.post("/signup", async (req, res) => {
   try {
     const { name, email, phone } = req.body;
 
     console.log("Signup attempt for:", email);
 
+    // Check if user already exists and is verified in DB
     const existingUser = await User.findOne({
       $or: [{ email: email?.toLowerCase() }, { phone }],
     });
 
-    if (existingUser) {
-      if (existingUser.isVerified) {
-        return res.status(400).json({
-          success: false,
-          error: "User already exists with this email or phone number",
-        });
-      } else {
-        const otp = generateOTP();
-        const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
-
-        existingUser.name = name;
-        existingUser.verificationCode = otp;
-        existingUser.verificationCodeExpires = verificationCodeExpires;
-
-        await existingUser.save();
-
-        console.log(`🔐 OTP for existing user ${email}: ${otp}`);
-
-        try {
-          await sendVerificationEmail(email, name, otp);
-        } catch (emailError) {
-          console.error("Email sending failed:", emailError.message);
-        }
-
-        return res.status(200).json({
-          success: true,
-          message: "Verification code sent to your email. Please check your inbox (and spam folder).",
-          requiresVerification: true,
-          email,
-        });
-      }
+    if (existingUser && existingUser.isVerified) {
+      return res.status(400).json({
+        success: false,
+        error: "User already exists with this email or phone number",
+      });
     }
 
-    // Create new user
+    // Generate OTP
     const otp = generateOTP();
-    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
+    const verificationCodeExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
 
-    const user = new User({
+    // Store user data temporarily (not in database yet)
+    tempUsers.set(email.toLowerCase(), {
       name,
       email: email.toLowerCase(),
       phone,
-      savedProducts: [],
-      isVerified: false,
-      verificationCode: otp,
+      otp,
       verificationCodeExpires,
+      createdAt: Date.now()
     });
 
-    await user.save();
+    console.log(`🔐 OTP for ${email}: ${otp}`);
 
-    console.log("New user created:", user._id);
-    console.log(`🔐 OTP for new user ${email}: ${otp}`);
-
-    // Send email AFTER user is created
+    // Send email with OTP
     try {
       await sendVerificationEmail(email, name, otp);
     } catch (emailError) {
-      console.error("Email sending failed but user was created:", emailError.message);
+      console.error("Email sending failed:", emailError.message);
+      // Remove temp user if email fails
+      tempUsers.delete(email.toLowerCase());
+      return res.status(500).json({
+        success: false,
+        error: "Failed to send verification code. Please try again.",
+      });
     }
 
-    res.status(201).json({
+    res.status(200).json({
       success: true,
-      message: "Verification code sent to your email. Please check your inbox (and spam folder).",
+      message: "Verification code sent to your email. Please check your inbox.",
       requiresVerification: true,
       email,
     });
   } catch (error) {
     console.error("Signup error:", error);
-
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        error: "User already exists with this email or phone number.",
-      });
-    }
-
     res.status(500).json({
       success: false,
       error: "Signup failed. Please try again later.",
@@ -182,7 +156,7 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-// Verify OTP
+// Verify OTP - ONLY saves to DB after successful verification
 router.post("/verify-otp", async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -191,24 +165,67 @@ router.post("/verify-otp", async (req, res) => {
       return res.status(400).json({ error: "Email and OTP are required" });
     }
 
-    const user = await User.findOne({
-      email: email.toLowerCase(),
-      verificationCode: otp,
-      verificationCodeExpires: { $gt: Date.now() },
-    });
+    // Check temp storage for unverified user
+    const tempUser = tempUsers.get(email.toLowerCase());
 
-    if (!user) {
+    if (!tempUser) {
       return res.status(400).json({
-        error: "Invalid or expired verification code. Please request a new code.",
+        error: "No pending verification found. Please sign up again.",
       });
     }
 
-    user.isVerified = true;
-    user.verificationCode = undefined;
-    user.verificationCodeExpires = undefined;
+    // Check if OTP is expired
+    if (Date.now() > tempUser.verificationCodeExpires) {
+      tempUsers.delete(email.toLowerCase());
+      return res.status(400).json({
+        error: "Verification code has expired. Please request a new code.",
+      });
+    }
 
-    await user.save();
+    // Check if OTP matches
+    if (tempUser.otp !== otp) {
+      return res.status(400).json({
+        error: "Invalid verification code. Please try again.",
+      });
+    }
 
+    // Check if user already exists in DB (might have been created by another process)
+    let user = await User.findOne({
+      $or: [{ email: tempUser.email }, { phone: tempUser.phone }],
+    });
+
+    if (user && user.isVerified) {
+      tempUsers.delete(email.toLowerCase());
+      return res.status(400).json({
+        error: "User already exists with this email or phone number.",
+      });
+    }
+
+    if (user && !user.isVerified) {
+      // Update existing unverified user
+      user.name = tempUser.name;
+      user.isVerified = true;
+      user.verificationCode = undefined;
+      user.verificationCodeExpires = undefined;
+      await user.save();
+    } else {
+      // Create NEW user in database ONLY after successful verification
+      user = new User({
+        name: tempUser.name,
+        email: tempUser.email,
+        phone: tempUser.phone,
+        savedProducts: [],
+        isVerified: true,
+      });
+      await user.save();
+    }
+
+    // Remove from temp storage
+    tempUsers.delete(email.toLowerCase());
+
+    console.log("✅ User verified and saved to DB:", user._id);
+
+    // Generate JWT token
     const token = jwt.sign(
       {
         userId: user._id,
@@ -236,37 +253,44 @@ router.post("/verify-otp", async (req, res) => {
   }
 });
 
-// Resend verification
+// Resend verification code
 router.post("/resend-verification", async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({
-      email: email.toLowerCase(),
-    });
+    const tempUser = tempUsers.get(email.toLowerCase());
 
-    if (!user) {
+    if (!tempUser) {
       return res.status(404).json({
-        error: "User not found",
+        error: "No pending verification found. Please sign up again.",
       });
     }
 
-    if (user.isVerified) {
+    // Check if already verified in DB
+    const existingUser = await User.findOne({
+      email: email.toLowerCase(),
+    });
+
+    if (existingUser && existingUser.isVerified) {
+      tempUsers.delete(email.toLowerCase());
       return res.status(400).json({
         error: "Email is already verified",
       });
     }
 
+    // Generate new OTP
     const otp = generateOTP();
+    const verificationCodeExpires = Date.now() + 10 * 60 * 1000;
 
-    user.verificationCode = otp;
-    user.verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
-
-    await user.save();
+    // Update temp user
+    tempUser.otp = otp;
+    tempUser.verificationCodeExpires = verificationCodeExpires;
+    tempUsers.set(email.toLowerCase(), tempUser);
 
     console.log(`🔐 Resend OTP for ${email}: ${otp}`);
 
-    await sendVerificationEmail(email, user.name, otp);
+    // Send new OTP
+    await sendVerificationEmail(email, tempUser.name, otp);
 
     res.json({
       success: true,
@@ -331,5 +355,16 @@ router.post("/login", async (req, res) => {
     });
   }
 });
+
+// Clean up expired temp users every hour
+setInterval(() => {
+  const now = Date.now();
+  for (const [email, user] of tempUsers.entries()) {
+    if (now > user.verificationCodeExpires) {
+      tempUsers.delete(email);
+      console.log(`🧹 Cleaned up expired temp user: ${email}`);
+    }
+  }
+}, 60 * 60 * 1000); // Run every hour
 
 export default router;
