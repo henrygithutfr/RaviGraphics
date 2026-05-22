@@ -5,26 +5,28 @@ import nodemailer from "nodemailer";
 
 const router = express.Router();
 
-// Configure Nodemailer transporter (same as your main server file)
+// Gmail transporter with Render-optimized settings
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
+  service: 'gmail',  // Using service instead of host/port often works better
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  family: 4,  // Force IPv4
-  connectionTimeout: 15000,
-  socketTimeout: 15000
+  pool: true,  // Use pooled connections
+  maxConnections: 1,  // Limit connections
+  rateDelta: 1000,  // How many milliseconds between rate limited emails
+  rateLimit: 5,  // Max 5 emails per second (Gmail's limit)
+  socketTimeout: 30000,  // Increase timeout
+  connectionTimeout: 30000,
 });
 
-// Verify transporter configuration
+// Test connection (don't fail if it doesn't work immediately)
 transporter.verify((error, success) => {
   if (error) {
-    console.log("❌ Email configuration error in auth:", error.message);
+    console.log("⚠️ Email verification warning:", error.message);
+    console.log("Will retry on first send attempt");
   } else {
-    console.log("✅ Email server is ready in auth routes");
+    console.log("✅ Email transporter ready");
   }
 });
 
@@ -56,58 +58,45 @@ const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Send verification email using Nodemailer
+// Send verification email using Gmail
 const sendVerificationEmail = async (email, name, otp) => {
   try {
-    console.log("Sending OTP to:", email);
+    console.log("📧 Attempting to send OTP to:", email);
 
     const mailOptions = {
       from: `"Ravi Graphics" <${process.env.EMAIL_USER}>`,
-      to: email,  // ✅ Sends to customer's email from signup form
-      subject: "Your Verification Code",
+      to: email,
+      subject: "Your Verification Code - Ravi Graphics",
       html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <h2>Hello ${name}</h2>
+        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 500px;">
+          <h2 style="color: #ea580c;">Hello ${name}!</h2>
           <p>Your verification code is:</p>
-
-          <div style="
-            font-size: 32px;
-            font-weight: bold;
-            letter-spacing: 5px;
-            background: #f3f4f6;
-            padding: 15px;
-            display: inline-block;
-            border-radius: 10px;
-            margin: 20px 0;
-          ">
+          <div style="font-size: 36px; font-weight: bold; letter-spacing: 5px; background: #f3f4f6; padding: 15px; text-align: center; border-radius: 10px; margin: 20px 0;">
             ${otp}
           </div>
-
-          <p>This code expires in 10 minutes.</p>
-
-          <p style="margin-top: 30px;">
+          <p>This code expires in <strong>10 minutes</strong>.</p>
+          <hr style="margin: 20px 0;">
+          <p style="color: #6b7280; font-size: 12px;">
             Ravi Graphics — Where Quality Meets Excellence ☀️
           </p>
         </div>
       `,
-      // Add plain text version for better email client compatibility
       text: `
-        Hello ${name},
-        
-        Your verification code is: ${otp}
-        
-        This code expires in 10 minutes.
-        
-        Ravi Graphics — Where Quality Meets Excellence ☀️
+Hello ${name}!
+
+Your verification code is: ${otp}
+
+This code expires in 10 minutes.
+
+Ravi Graphics — Where Quality Meets Excellence ☀️
       `
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Email sent successfully:", info.messageId);
-    
+    console.log("✅ Email sent successfully! Message ID:", info.messageId);
     return true;
   } catch (error) {
-    console.error("❌ Nodemailer email failed:", error);
+    console.error("❌ Email sending failed:", error.message);
     throw error;
   }
 };
@@ -131,9 +120,7 @@ router.post("/signup", async (req, res) => {
         });
       } else {
         const otp = generateOTP();
-        const verificationCodeExpires = new Date(
-          Date.now() + 10 * 60 * 1000
-        );
+        const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
 
         existingUser.name = name;
         existingUser.verificationCode = otp;
@@ -141,18 +128,18 @@ router.post("/signup", async (req, res) => {
 
         await existingUser.save();
 
-        console.log(`🔐 OTP for existing user ${email}: ${otp}`);
+        console.log(`🔐 OTP for ${email}: ${otp}`);
 
         try {
           await sendVerificationEmail(email, name, otp);
         } catch (emailError) {
           console.error("Email sending failed:", emailError.message);
+          // Still return success to user, but log the error
         }
 
         return res.status(200).json({
           success: true,
-          message:
-            "Verification code sent to your email. Please check your inbox.",
+          message: "Verification code sent to your email. Please check your inbox (and spam folder).",
           requiresVerification: true,
           email,
         });
@@ -161,9 +148,7 @@ router.post("/signup", async (req, res) => {
 
     // Create new user
     const otp = generateOTP();
-    const verificationCodeExpires = new Date(
-      Date.now() + 10 * 60 * 1000
-    );
+    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     const user = new User({
       name,
@@ -178,21 +163,17 @@ router.post("/signup", async (req, res) => {
     await user.save();
 
     console.log("New user created:", user._id);
-    console.log(`🔐 OTP for new user ${email}: ${otp}`);
+    console.log(`🔐 OTP for ${email}: ${otp}`);
 
     try {
       await sendVerificationEmail(email, name, otp);
     } catch (emailError) {
-      console.error(
-        "Email sending failed but user was created:",
-        emailError.message
-      );
+      console.error("Email sending failed but user was created:", emailError.message);
     }
 
     res.status(201).json({
       success: true,
-      message:
-        "Verification code sent to your email. Please check your inbox.",
+      message: "Verification code sent to your email. Please check your inbox (and spam folder).",
       requiresVerification: true,
       email,
     });
@@ -219,9 +200,7 @@ router.post("/verify-otp", async (req, res) => {
     const { email, otp } = req.body;
 
     if (!email || !otp) {
-      return res
-        .status(400)
-        .json({ error: "Email and OTP are required" });
+      return res.status(400).json({ error: "Email and OTP are required" });
     }
 
     const user = await User.findOne({
@@ -232,8 +211,7 @@ router.post("/verify-otp", async (req, res) => {
 
     if (!user) {
       return res.status(400).json({
-        error:
-          "Invalid or expired verification code. Please request a new code.",
+        error: "Invalid or expired verification code. Please request a new code.",
       });
     }
 
@@ -294,9 +272,7 @@ router.post("/resend-verification", async (req, res) => {
     const otp = generateOTP();
 
     user.verificationCode = otp;
-    user.verificationCodeExpires = new Date(
-      Date.now() + 10 * 60 * 1000
-    );
+    user.verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     await user.save();
 
@@ -333,8 +309,7 @@ router.post("/login", async (req, res) => {
     if (!user.isVerified) {
       return res.status(401).json({
         success: false,
-        error:
-          "Please verify your email before logging in.",
+        error: "Please verify your email before logging in.",
         requiresVerification: true,
         email: user.email,
       });
@@ -362,7 +337,6 @@ router.post("/login", async (req, res) => {
     });
   } catch (error) {
     console.error("Login error:", error);
-
     res.status(500).json({
       success: false,
       error: error.message,

@@ -77,26 +77,28 @@ const connectDB = async () => {
 
 connectDB();
 
-// ✅ FIXED: Email configuration with explicit IPv4 settings
+// ✅ OPTIMIZED: Gmail configuration for Render
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
+  service: 'gmail',  // Using service instead of host/port
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  family: 4,  // Force IPv4 - CRITICAL
-  connectionTimeout: 15000,
-  socketTimeout: 15000
+  pool: true,  // Use pooled connections
+  maxConnections: 1,
+  rateDelta: 1000,
+  rateLimit: 5,
+  socketTimeout: 30000,
+  connectionTimeout: 30000,
 });
 
-// Test email configuration
+// Test email configuration (don't let it block startup)
 transporter.verify((error, success) => {
   if (error) {
-    console.log("❌ Email configuration error:", error.message);
+    console.log("⚠️ Email verification warning:", error.message);
+    console.log("Will retry on first send attempt");
   } else {
-    console.log("✅ Email server is ready to send messages");
+    console.log("✅ Email transporter ready");
   }
 });
 
@@ -129,8 +131,10 @@ app.post("/api/contact", async (req, res) => {
   }
 
   try {
+    // Send to admin (fixed from field - Gmail requires valid sender)
     await transporter.sendMail({
-      from: `"${name}" <${email}>`,
+      from: `"Ravi Graphics" <${process.env.EMAIL_USER}>`,  // Fixed: Use your Gmail as sender
+      replyTo: email,  // So you can reply to the customer
       to: process.env.CONTACT_EMAIL || process.env.EMAIL_USER,
       subject: subject || `Contact Form Submission from ${name}`,
       html: `
@@ -146,6 +150,7 @@ app.post("/api/contact", async (req, res) => {
       `,
     });
 
+    // Auto reply to customer
     await transporter.sendMail({
       from: `"Ravi Graphics" <${process.env.EMAIL_USER}>`,
       to: email,
