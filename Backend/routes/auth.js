@@ -43,7 +43,7 @@ const sendVerificationEmail = async (email, name, otp) => {
       {
         sender: {
           name: "Ravi Graphics",
-          email: process.env.BREVO_SENDER_EMAIL || "noreply@ravigraphics.com"
+          email: process.env.BREVO_SENDER_EMAIL || "ravigraphics.odisha@gmail.com"
         },
         to: [{ email: email, name: name }],
         subject: "Your Verification Code - Ravi Graphics",
