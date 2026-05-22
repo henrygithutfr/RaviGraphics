@@ -1,35 +1,9 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import nodemailer from "nodemailer";
+import axios from "axios";
 
 const router = express.Router();
-
-// ✅ BREVO SMTP CONFIGURATION - Using your variable names
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
-  port: parseInt(process.env.SMTP_PORT) || 587,
-  secure: false,  // false for port 587
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  tls: {
-    ciphers: 'SSLv3',
-    rejectUnauthorized: false
-  },
-  connectionTimeout: 30000,
-  socketTimeout: 30000,
-});
-
-// Test email configuration
-transporter.verify((error, success) => {
-  if (error) {
-    console.log("❌ Brevo email configuration error in auth:", error.message);
-  } else {
-    console.log("✅ Brevo email transporter ready in auth routes");
-  }
-});
 
 // Middleware to verify JWT token
 export const verifyToken = (req, res, next) => {
@@ -59,30 +33,35 @@ const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Send verification email using Brevo
+// Send verification email using Brevo API (NOT SMTP)
 const sendVerificationEmail = async (email, name, otp) => {
   try {
     console.log("📧 Attempting to send OTP to:", email);
 
-    const mailOptions = {
-      from: `"Ravi Graphics" <${process.env.EMAIL_FROM || process.env.SMTP_USER}>`,
-      to: email,
-      subject: "Your Verification Code - Ravi Graphics",
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 500px;">
-          <h2 style="color: #ea580c;">Hello ${name}!</h2>
-          <p>Your verification code is:</p>
-          <div style="font-size: 36px; font-weight: bold; letter-spacing: 5px; background: #f3f4f6; padding: 15px; text-align: center; border-radius: 10px; margin: 20px 0;">
-            ${otp}
+    const response = await axios.post(
+      'https://api.brevo.com/v3/smtp/email',
+      {
+        sender: {
+          name: "Ravi Graphics",
+          email: process.env.BREVO_SENDER_EMAIL || "noreply@ravigraphics.com"
+        },
+        to: [{ email: email, name: name }],
+        subject: "Your Verification Code - Ravi Graphics",
+        htmlContent: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 500px;">
+            <h2 style="color: #ea580c;">Hello ${name}!</h2>
+            <p>Your verification code is:</p>
+            <div style="font-size: 36px; font-weight: bold; letter-spacing: 5px; background: #f3f4f6; padding: 15px; text-align: center; border-radius: 10px; margin: 20px 0;">
+              ${otp}
+            </div>
+            <p>This code expires in <strong>10 minutes</strong>.</p>
+            <hr style="margin: 20px 0;">
+            <p style="color: #6b7280; font-size: 12px;">
+              Ravi Graphics — Where Quality Meets Excellence ☀️
+            </p>
           </div>
-          <p>This code expires in <strong>10 minutes</strong>.</p>
-          <hr style="margin: 20px 0;">
-          <p style="color: #6b7280; font-size: 12px;">
-            Ravi Graphics — Where Quality Meets Excellence ☀️
-          </p>
-        </div>
-      `,
-      text: `
+        `,
+        textContent: `
 Hello ${name}!
 
 Your verification code is: ${otp}
@@ -90,14 +69,22 @@ Your verification code is: ${otp}
 This code expires in 10 minutes.
 
 Ravi Graphics — Where Quality Meets Excellence ☀️
-      `
-    };
+        `
+      },
+      {
+        headers: {
+          'accept': 'application/json',
+          'api-key': process.env.BREVO_API_KEY,
+          'content-type': 'application/json',
+        },
+        timeout: 10000
+      }
+    );
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Email sent successfully! Message ID:", info.messageId);
+    console.log("✅ Email sent successfully! Message ID:", response.data.messageId);
     return true;
   } catch (error) {
-    console.error("❌ Email sending failed:", error.message);
+    console.error("❌ Email sending failed:", error.response?.data || error.message);
     throw error;
   }
 };
@@ -165,6 +152,7 @@ router.post("/signup", async (req, res) => {
     console.log("New user created:", user._id);
     console.log(`🔐 OTP for new user ${email}: ${otp}`);
 
+    // Send email AFTER user is created
     try {
       await sendVerificationEmail(email, name, otp);
     } catch (emailError) {
