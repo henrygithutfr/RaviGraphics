@@ -1,11 +1,11 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-import crypto from "crypto";
 import User from "../models/User.js";
-import nodemailer from "nodemailer";
-import dns from "dns";
+import { Resend } from "resend";
 
 const router = express.Router();
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Middleware to verify JWT token
 export const verifyToken = (req, res, next) => {
@@ -20,8 +20,9 @@ export const verifyToken = (req, res, next) => {
   try {
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET || "ravi_graphics_secret_key_2024",
+      process.env.JWT_SECRET || "ravi_graphics_secret_key_2024"
     );
+
     req.userId = decoded.userId;
     next();
   } catch (error) {
@@ -29,63 +30,63 @@ export const verifyToken = (req, res, next) => {
   }
 };
 
-// Generate 6-digit OTP code
+// Generate 6-digit OTP
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
-// Send verification email with OTP - FIXED with proper HTML
+
+// Send verification email using Resend
 const sendVerificationEmail = async (email, name, otp) => {
   try {
-    console.log("Attempting to send email to:", email);
+    console.log("Sending OTP to:", email);
 
-    const addresses = await dns.promises.resolve4("smtp.gmail.com");
-
-    console.log("IPv4 Address:", addresses[0]);
-
-    const transporter = nodemailer.createTransport({
-      host: addresses[0],
-      port: 587,
-      secure: false,
-      requireTLS: true,
-
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-
-      tls: {
-        servername: "smtp.gmail.com",
-        rejectUnauthorized: false,
-      },
-    });
-
-    const info = await transporter.sendMail({
-      from: `"Ravi Graphics" <${process.env.EMAIL_USER}>`,
+    const response = await resend.emails.send({
+      from: "Ravi Graphics <onboarding@resend.dev>",
       to: email,
       subject: "Your Verification Code",
       html: `
-        <h2>Hello ${name}</h2>
-        <p>Your OTP is:</p>
-        <h1>${otp}</h1>
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2>Hello ${name}</h2>
+          <p>Your verification code is:</p>
+
+          <div style="
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 5px;
+            background: #f3f4f6;
+            padding: 15px;
+            display: inline-block;
+            border-radius: 10px;
+            margin: 20px 0;
+          ">
+            ${otp}
+          </div>
+
+          <p>This code expires in 10 minutes.</p>
+
+          <p style="margin-top: 30px;">
+            Ravi Graphics — Where Quality Meets Excellence ☀️
+          </p>
+        </div>
       `,
     });
 
-    console.log("✅ Email sent:", info.messageId);
+    console.log("✅ Email sent:", response);
 
+    return true;
   } catch (error) {
-    console.error("❌ Email sending failed:", error);
+    console.error("❌ Resend email failed:", error);
     throw error;
   }
 };
 
-// STEP 1: Signup - Send verification code to email
+// Signup Route
 router.post("/signup", async (req, res) => {
   try {
     const { name, email, phone } = req.body;
 
     console.log("Signup attempt for:", email);
 
-    // Check if user already exists and is verified
     const existingUser = await User.findOne({
       $or: [{ email: email?.toLowerCase() }, { phone }],
     });
@@ -97,24 +98,23 @@ router.post("/signup", async (req, res) => {
           error: "User already exists with this email or phone number",
         });
       } else {
-        // User exists but not verified - update their info and resend code
         const otp = generateOTP();
-        const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
+        const verificationCodeExpires = new Date(
+          Date.now() + 10 * 60 * 1000
+        );
 
         existingUser.name = name;
         existingUser.verificationCode = otp;
         existingUser.verificationCodeExpires = verificationCodeExpires;
+
         await existingUser.save();
 
         console.log(`🔐 OTP for existing user ${email}: ${otp}`);
 
-        // Send verification email
         try {
           await sendVerificationEmail(email, name, otp);
-          console.log("Verification email sent to existing user:", email);
         } catch (emailError) {
           console.error("Email sending failed:", emailError.message);
-          // Still return success - user can see OTP in logs if needed
         }
 
         return res.status(200).json({
@@ -122,16 +122,17 @@ router.post("/signup", async (req, res) => {
           message:
             "Verification code sent to your email. Please check your inbox.",
           requiresVerification: true,
-          email: email,
+          email,
         });
       }
     }
 
-    // Generate OTP
+    // Create new user
     const otp = generateOTP();
-    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
+    const verificationCodeExpires = new Date(
+      Date.now() + 10 * 60 * 1000
+    );
 
-    // Create new user (unverified)
     const user = new User({
       name,
       email: email.toLowerCase(),
@@ -143,31 +144,29 @@ router.post("/signup", async (req, res) => {
     });
 
     await user.save();
+
     console.log("New user created:", user._id);
     console.log(`🔐 OTP for new user ${email}: ${otp}`);
 
-    // Send verification email
     try {
       await sendVerificationEmail(email, name, otp);
-      console.log("Verification email sent to new user:", email);
     } catch (emailError) {
       console.error(
         "Email sending failed but user was created:",
-        emailError.message,
+        emailError.message
       );
-      // User is created but email failed - they can request resend
     }
 
     res.status(201).json({
       success: true,
-      message: "Verification code sent to your email. Please check your inbox.",
+      message:
+        "Verification code sent to your email. Please check your inbox.",
       requiresVerification: true,
-      email: email,
+      email,
     });
   } catch (error) {
     console.error("Signup error:", error);
 
-    // Handle duplicate key error (MongoDB error code 11000)
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
@@ -182,13 +181,15 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-// STEP 2: Verify OTP code
+// Verify OTP
 router.post("/verify-otp", async (req, res) => {
   try {
     const { email, otp } = req.body;
 
     if (!email || !otp) {
-      return res.status(400).json({ error: "Email and OTP code are required" });
+      return res
+        .status(400)
+        .json({ error: "Email and OTP are required" });
     }
 
     const user = await User.findOne({
@@ -204,17 +205,19 @@ router.post("/verify-otp", async (req, res) => {
       });
     }
 
-    // Mark user as verified
     user.isVerified = true;
     user.verificationCode = undefined;
     user.verificationCodeExpires = undefined;
+
     await user.save();
 
-    // Generate JWT token for auto-login
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      {
+        userId: user._id,
+        email: user.email,
+      },
       process.env.JWT_SECRET || "ravi_graphics_secret_key_2024",
-      { expiresIn: "7d" },
+      { expiresIn: "7d" }
     );
 
     res.json({
@@ -235,37 +238,39 @@ router.post("/verify-otp", async (req, res) => {
   }
 });
 
-// Resend verification code
+// Resend verification
 router.post("/resend-verification", async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+    });
 
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({
+        error: "User not found",
+      });
     }
 
     if (user.isVerified) {
-      return res.status(400).json({ error: "Email is already verified" });
+      return res.status(400).json({
+        error: "Email is already verified",
+      });
     }
 
-    // Generate new OTP
     const otp = generateOTP();
-    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     user.verificationCode = otp;
-    user.verificationCodeExpires = verificationCodeExpires;
+    user.verificationCodeExpires = new Date(
+      Date.now() + 10 * 60 * 1000
+    );
+
     await user.save();
 
     console.log(`🔐 Resend OTP for ${email}: ${otp}`);
 
-    try {
-      await sendVerificationEmail(email, user.name, otp);
-      console.log("Resend email sent to:", email);
-    } catch (emailError) {
-      console.error("Resend email failed:", emailError.message);
-    }
+    await sendVerificationEmail(email, user.name, otp);
 
     res.json({
       success: true,
@@ -277,7 +282,7 @@ router.post("/resend-verification", async (req, res) => {
   }
 });
 
-// Login - Check if email is verified
+// Login
 router.post("/login", async (req, res) => {
   try {
     const { email, phone } = req.body;
@@ -297,16 +302,19 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({
         success: false,
         error:
-          "Please verify your email before logging in. Check your inbox for the verification code.",
+          "Please verify your email before logging in.",
         requiresVerification: true,
         email: user.email,
       });
     }
 
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      {
+        userId: user._id,
+        email: user.email,
+      },
       process.env.JWT_SECRET || "ravi_graphics_secret_key_2024",
-      { expiresIn: "7d" },
+      { expiresIn: "7d" }
     );
 
     res.json({
@@ -322,84 +330,11 @@ router.post("/login", async (req, res) => {
     });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
 
-// Get user profile
-router.get("/profile", verifyToken, async (req, res) => {
-  try {
-    const user = await User.findById(req.userId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    res.json({
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        savedProducts: user.savedProducts,
-      },
+    res.status(500).json({
+      success: false,
+      error: error.message,
     });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Save product to user's saved list
-router.post("/save-product", verifyToken, async (req, res) => {
-  try {
-    const { productId } = req.body;
-    const user = await User.findById(req.userId);
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    if (!user.savedProducts.includes(productId)) {
-      user.savedProducts.push(productId);
-      await user.save();
-    }
-
-    res.json({
-      success: true,
-      savedProducts: user.savedProducts,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Remove product from saved list
-router.delete("/save-product/:productId", verifyToken, async (req, res) => {
-  try {
-    const { productId } = req.params;
-    const user = await User.findById(req.userId);
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    user.savedProducts = user.savedProducts.filter((id) => id !== productId);
-    await user.save();
-
-    res.json({
-      success: true,
-      savedProducts: user.savedProducts,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get user's saved products
-router.get("/saved-products", verifyToken, async (req, res) => {
-  try {
-    const user = await User.findById(req.userId);
-    res.json({ savedProducts: user.savedProducts });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
   }
 });
 
