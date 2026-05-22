@@ -45,6 +45,12 @@ const sendVerificationEmail = async (email, name, otp) => {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+      tls: {
+        family: 4,
+        rejectUnauthorized: false,
+      },
+
+      connectionTimeout: 20000,
     });
 
     const mailOptions = {
@@ -113,7 +119,8 @@ router.post("/signup", async (req, res) => {
 
         return res.status(200).json({
           success: true,
-          message: "Verification code sent to your email. Please check your inbox.",
+          message:
+            "Verification code sent to your email. Please check your inbox.",
           requiresVerification: true,
           email: email,
         });
@@ -144,7 +151,10 @@ router.post("/signup", async (req, res) => {
       await sendVerificationEmail(email, name, otp);
       console.log("Verification email sent to new user:", email);
     } catch (emailError) {
-      console.error("Email sending failed but user was created:", emailError.message);
+      console.error(
+        "Email sending failed but user was created:",
+        emailError.message,
+      );
       // User is created but email failed - they can request resend
     }
 
@@ -189,7 +199,8 @@ router.post("/verify-otp", async (req, res) => {
 
     if (!user) {
       return res.status(400).json({
-        error: "Invalid or expired verification code. Please request a new code.",
+        error:
+          "Invalid or expired verification code. Please request a new code.",
       });
     }
 
@@ -285,7 +296,8 @@ router.post("/login", async (req, res) => {
     if (!user.isVerified) {
       return res.status(401).json({
         success: false,
-        error: "Please verify your email before logging in. Check your inbox for the verification code.",
+        error:
+          "Please verify your email before logging in. Check your inbox for the verification code.",
         requiresVerification: true,
         email: user.email,
       });

@@ -86,6 +86,12 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    family: 4,
+    rejectUnauthorized: false,
+  },
+
+  connectionTimeout: 20000,
 });
 
 // Test email configuration
