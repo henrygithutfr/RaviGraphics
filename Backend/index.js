@@ -1,5 +1,5 @@
 import dns from "dns";
-dns.setDefaultResultOrder('ipv4first');
+dns.setDefaultResultOrder('ipv4first');  // Keep this - it helps but not enough
 
 import express from "express";
 import cors from "cors";
@@ -77,28 +77,27 @@ const connectDB = async () => {
 
 connectDB();
 
-// ✅ OPTIMIZED: Gmail configuration for Render
+// ✅ CRITICAL FIX: Force IPv4 with port 587
 const transporter = nodemailer.createTransport({
-  service: 'gmail',  // Using service instead of host/port
+  host: 'smtp.gmail.com',
+  port: 587,  // Using 587 instead of 465
+  secure: false,  // false for port 587
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  pool: true,  // Use pooled connections
-  maxConnections: 1,
-  rateDelta: 1000,
-  rateLimit: 5,
-  socketTimeout: 30000,
+  family: 4,  // Force IPv4 - THIS IS CRITICAL
+  requireTLS: true,  // Require TLS for port 587
   connectionTimeout: 30000,
+  socketTimeout: 30000,
 });
 
-// Test email configuration (don't let it block startup)
+// Test email configuration
 transporter.verify((error, success) => {
   if (error) {
-    console.log("⚠️ Email verification warning:", error.message);
-    console.log("Will retry on first send attempt");
+    console.log("❌ Email configuration error:", error.message);
   } else {
-    console.log("✅ Email transporter ready");
+    console.log("✅ Email server is ready to send messages");
   }
 });
 
@@ -131,10 +130,9 @@ app.post("/api/contact", async (req, res) => {
   }
 
   try {
-    // Send to admin (fixed from field - Gmail requires valid sender)
     await transporter.sendMail({
-      from: `"Ravi Graphics" <${process.env.EMAIL_USER}>`,  // Fixed: Use your Gmail as sender
-      replyTo: email,  // So you can reply to the customer
+      from: `"Ravi Graphics" <${process.env.EMAIL_USER}>`,
+      replyTo: email,
       to: process.env.CONTACT_EMAIL || process.env.EMAIL_USER,
       subject: subject || `Contact Form Submission from ${name}`,
       html: `
@@ -150,7 +148,6 @@ app.post("/api/contact", async (req, res) => {
       `,
     });
 
-    // Auto reply to customer
     await transporter.sendMail({
       from: `"Ravi Graphics" <${process.env.EMAIL_USER}>`,
       to: email,

@@ -6,18 +6,19 @@ import nodemailer from "nodemailer";
 const router = express.Router();
 
 // Gmail transporter with Render-optimized settings
+// In auth.js, replace the transporter with this:
 const transporter = nodemailer.createTransport({
-  service: 'gmail',  // Using service instead of host/port often works better
+  host: 'smtp.gmail.com',
+  port: 587,  // Changed to 587
+  secure: false,  // false for port 587
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  pool: true,  // Use pooled connections
-  maxConnections: 1,  // Limit connections
-  rateDelta: 1000,  // How many milliseconds between rate limited emails
-  rateLimit: 5,  // Max 5 emails per second (Gmail's limit)
-  socketTimeout: 30000,  // Increase timeout
+  family: 4,  // Force IPv4 - CRITICAL
+  requireTLS: true,
   connectionTimeout: 30000,
+  socketTimeout: 30000,
 });
 
 // Test connection (don't fail if it doesn't work immediately)
