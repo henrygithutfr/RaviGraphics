@@ -5,29 +5,29 @@ import nodemailer from "nodemailer";
 
 const router = express.Router();
 
-// Gmail transporter with Render-optimized settings
-// In auth.js, replace the transporter with this:
+// ✅ BREVO SMTP CONFIGURATION FOR RENDER (Port 2525 works on free tier)
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,  // Changed to 587
-  secure: false,  // false for port 587
+  host: 'smtp-relay.brevo.com',
+  port: 2525,  // Render allows port 2525 on free tier
+  secure: false,  // false for port 2525
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.BREVO_SMTP_LOGIN,  // Your Brevo login email
+    pass: process.env.BREVO_SMTP_KEY,     // Your Brevo SMTP key
   },
-  family: 4,  // Force IPv4 - CRITICAL
-  requireTLS: true,
+  tls: {
+    ciphers: 'SSLv3',
+    rejectUnauthorized: false
+  },
   connectionTimeout: 30000,
   socketTimeout: 30000,
 });
 
-// Test connection (don't fail if it doesn't work immediately)
+// Test email configuration
 transporter.verify((error, success) => {
   if (error) {
-    console.log("⚠️ Email verification warning:", error.message);
-    console.log("Will retry on first send attempt");
+    console.log("❌ Brevo email configuration error in auth:", error.message);
   } else {
-    console.log("✅ Email transporter ready");
+    console.log("✅ Brevo email transporter ready in auth routes");
   }
 });
 
@@ -59,13 +59,13 @@ const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Send verification email using Gmail
+// Send verification email using Brevo
 const sendVerificationEmail = async (email, name, otp) => {
   try {
     console.log("📧 Attempting to send OTP to:", email);
 
     const mailOptions = {
-      from: `"Ravi Graphics" <${process.env.EMAIL_USER}>`,
+      from: `"Ravi Graphics" <${process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SMTP_LOGIN}>`,
       to: email,
       subject: "Your Verification Code - Ravi Graphics",
       html: `
@@ -129,13 +129,12 @@ router.post("/signup", async (req, res) => {
 
         await existingUser.save();
 
-        console.log(`🔐 OTP for ${email}: ${otp}`);
+        console.log(`🔐 OTP for existing user ${email}: ${otp}`);
 
         try {
           await sendVerificationEmail(email, name, otp);
         } catch (emailError) {
           console.error("Email sending failed:", emailError.message);
-          // Still return success to user, but log the error
         }
 
         return res.status(200).json({
@@ -164,7 +163,7 @@ router.post("/signup", async (req, res) => {
     await user.save();
 
     console.log("New user created:", user._id);
-    console.log(`🔐 OTP for ${email}: ${otp}`);
+    console.log(`🔐 OTP for new user ${email}: ${otp}`);
 
     try {
       await sendVerificationEmail(email, name, otp);

@@ -1,5 +1,5 @@
 import dns from "dns";
-dns.setDefaultResultOrder('ipv4first');  // Keep this - it helps but not enough
+dns.setDefaultResultOrder('ipv4first');
 
 import express from "express";
 import cors from "cors";
@@ -13,16 +13,15 @@ import mongoose from "mongoose";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// FORCE LOAD .env from the correct path
+// Load .env
 dotenv.config({ path: path.join(__dirname, ".env") });
 
 // Debug: Check if env loaded properly
 console.log("=== ENV LOAD DEBUG ===");
 console.log("Current directory:", __dirname);
 console.log(".env path:", path.join(__dirname, ".env"));
-console.log("EMAIL_USER:", process.env.EMAIL_USER);
-console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
-console.log("EMAIL_PASS length:", process.env.EMAIL_PASS?.length);
+console.log("BREVO_SMTP_KEY exists:", !!process.env.BREVO_SMTP_KEY);
+console.log("BREVO_SMTP_LOGIN:", process.env.BREVO_SMTP_LOGIN);
 console.log("=====================");
 
 import authRoutes from "./routes/auth.js";
@@ -77,17 +76,19 @@ const connectDB = async () => {
 
 connectDB();
 
-// ✅ CRITICAL FIX: Force IPv4 with port 587
+// ✅ BREVO SMTP CONFIGURATION FOR RENDER (Port 2525 works on free tier)
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,  // Using 587 instead of 465
-  secure: false,  // false for port 587
+  host: 'smtp-relay.brevo.com',
+  port: 2525,  // Render allows port 2525 on free tier
+  secure: false,  // false for port 2525
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.BREVO_SMTP_LOGIN,  // Your Brevo login email
+    pass: process.env.BREVO_SMTP_KEY,     // Your Brevo SMTP key
   },
-  family: 4,  // Force IPv4 - THIS IS CRITICAL
-  requireTLS: true,  // Require TLS for port 587
+  tls: {
+    ciphers: 'SSLv3',
+    rejectUnauthorized: false
+  },
   connectionTimeout: 30000,
   socketTimeout: 30000,
 });
@@ -95,9 +96,9 @@ const transporter = nodemailer.createTransport({
 // Test email configuration
 transporter.verify((error, success) => {
   if (error) {
-    console.log("❌ Email configuration error:", error.message);
+    console.log("❌ Brevo email configuration error:", error.message);
   } else {
-    console.log("✅ Email server is ready to send messages");
+    console.log("✅ Brevo email transporter ready on port 2525");
   }
 });
 
@@ -130,26 +131,28 @@ app.post("/api/contact", async (req, res) => {
   }
 
   try {
+    // Send to admin
     await transporter.sendMail({
-      from: `"Ravi Graphics" <${process.env.EMAIL_USER}>`,
+      from: `"Ravi Graphics" <${process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SMTP_LOGIN}>`,
       replyTo: email,
-      to: process.env.CONTACT_EMAIL || process.env.EMAIL_USER,
+      to: process.env.CONTACT_EMAIL || process.env.BREVO_SMTP_LOGIN,
       subject: subject || `Contact Form Submission from ${name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px;">
           <h2 style="color: #ea580c;">New Contact Form Submission</h2>
           <table style="width: 100%; margin: 20px 0;">
-            <tr><th style="text-align: left;">Name:</th><td>${name}</td></tr>
-            <tr><th style="text-align: left;">Email:</th><td>${email}</td></tr>
-            <tr><th style="text-align: left;">Message:</th><td>${message.replace(/\n/g, "<br>")}</td></tr>
+            <tr><th style="text-align: left;">Name:</th><td>${name}<\/th></tr>
+            <tr><th style="text-align: left;">Email:</th><td>${email}<\/th></tr>
+            <tr><th style="text-align: left;">Message:</th><td>${message.replace(/\n/g, "<br>")}<\/th></tr>
           </table>
           <p style="color: #6b7280; font-size: 12px;">Sent from Ravi Graphics Contact Form</p>
         </div>
       `,
     });
 
+    // Auto reply to customer
     await transporter.sendMail({
-      from: `"Ravi Graphics" <${process.env.EMAIL_USER}>`,
+      from: `"Ravi Graphics" <${process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SMTP_LOGIN}>`,
       to: email,
       subject: "Thank you for contacting Ravi Graphics",
       html: `
