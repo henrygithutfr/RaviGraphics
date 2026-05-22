@@ -41,7 +41,7 @@ const sendVerificationEmail = async (email, name, otp) => {
     console.log("Sending OTP to:", email);
 
     const response = await resend.emails.send({
-      from: "Ravi Graphics <onboarding@resend.dev>",
+      from: "Ravi Graphics <noreply@ravigraphics.onrender.com>",
       to: email,
       subject: "Your Verification Code",
       html: `
@@ -71,7 +71,12 @@ const sendVerificationEmail = async (email, name, otp) => {
       `,
     });
 
-    console.log("✅ Email sent:", response);
+    if (response.error) {
+  console.error("❌ Resend Error:", response.error);
+  throw new Error(response.error.message);
+}
+
+console.log("✅ Email sent:", response.data);
 
     return true;
   } catch (error) {
