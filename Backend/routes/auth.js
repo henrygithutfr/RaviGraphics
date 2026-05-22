@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import User from "../models/User.js";
 import nodemailer from "nodemailer";
+import dns from "dns";
 
 const router = express.Router();
 
@@ -37,41 +38,40 @@ const sendVerificationEmail = async (email, name, otp) => {
   try {
     console.log("Attempting to send email to:", email);
 
+    const addresses = await dns.promises.resolve4("smtp.gmail.com");
+
+    console.log("IPv4 Address:", addresses[0]);
+
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
+      host: addresses[0],
       port: 587,
-      secure: true,
+      secure: false,
+      requireTLS: true,
+
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+
       tls: {
-        family: 4,
+        servername: "smtp.gmail.com",
         rejectUnauthorized: false,
       },
-
-      connectionTimeout: 20000,
     });
 
-    const mailOptions = {
+    const info = await transporter.sendMail({
       from: `"Ravi Graphics" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Your Verification Code",
       html: `
-        <div style="font-family: Arial;">
-          <h2>Hello ${name}</h2>
-          <p>Your OTP code is:</p>
-          <h1>${otp}</h1>
-          <p>This code expires in 10 minutes.</p>
-        </div>
+        <h2>Hello ${name}</h2>
+        <p>Your OTP is:</p>
+        <h1>${otp}</h1>
       `,
-    };
-
-    const info = await transporter.sendMail(mailOptions);
+    });
 
     console.log("✅ Email sent:", info.messageId);
 
-    return true;
   } catch (error) {
     console.error("❌ Email sending failed:", error);
     throw error;
