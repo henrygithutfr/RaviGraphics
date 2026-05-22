@@ -1,11 +1,32 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
 const router = express.Router();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Configure Nodemailer transporter (same as your main server file)
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  family: 4,  // Force IPv4
+  connectionTimeout: 15000,
+  socketTimeout: 15000
+});
+
+// Verify transporter configuration
+transporter.verify((error, success) => {
+  if (error) {
+    console.log("❌ Email configuration error in auth:", error.message);
+  } else {
+    console.log("✅ Email server is ready in auth routes");
+  }
+});
 
 // Middleware to verify JWT token
 export const verifyToken = (req, res, next) => {
@@ -35,14 +56,14 @@ const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Send verification email using Resend
+// Send verification email using Nodemailer
 const sendVerificationEmail = async (email, name, otp) => {
   try {
     console.log("Sending OTP to:", email);
 
-    const response = await resend.emails.send({
-      from: "Ravi Graphics <noreply@ravigraphics.onrender.com>",
-      to: email,
+    const mailOptions = {
+      from: `"Ravi Graphics" <${process.env.EMAIL_USER}>`,
+      to: email,  // ✅ Sends to customer's email from signup form
       subject: "Your Verification Code",
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px;">
@@ -69,18 +90,24 @@ const sendVerificationEmail = async (email, name, otp) => {
           </p>
         </div>
       `,
-    });
+      // Add plain text version for better email client compatibility
+      text: `
+        Hello ${name},
+        
+        Your verification code is: ${otp}
+        
+        This code expires in 10 minutes.
+        
+        Ravi Graphics — Where Quality Meets Excellence ☀️
+      `
+    };
 
-    if (response.error) {
-  console.error("❌ Resend Error:", response.error);
-  throw new Error(response.error.message);
-}
-
-console.log("✅ Email sent:", response.data);
-
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Email sent successfully:", info.messageId);
+    
     return true;
   } catch (error) {
-    console.error("❌ Resend email failed:", error);
+    console.error("❌ Nodemailer email failed:", error);
     throw error;
   }
 };
