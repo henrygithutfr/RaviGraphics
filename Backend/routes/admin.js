@@ -211,6 +211,30 @@ router.get("/users", verifyAdmin, async (req, res) => {
   }
 });
 
+// Delete user (ADD THIS NEW ROUTE)
+router.delete("/users/:userId", verifyAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    await User.findByIdAndDelete(userId);
+    
+    console.log(`✅ User deleted: ${user.email} (${user.name})`);
+    
+    res.json({ 
+      success: true, 
+      message: "User deleted successfully" 
+    });
+  } catch (error) {
+    console.error("Delete user error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ==================== SERVICES MANAGEMENT ====================
 
 // Create service category
