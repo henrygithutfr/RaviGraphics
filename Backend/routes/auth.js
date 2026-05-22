@@ -34,19 +34,42 @@ const generateOTP = () => {
 };
 // Send verification email with OTP - FIXED with proper HTML
 const sendVerificationEmail = async (email, name, otp) => {
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    family: 4,  // ← ADD THIS
-    connectionTimeout: 15000,
-    socketTimeout: 15000,
-  });
-  // ... rest of the function
+  try {
+    console.log("Attempting to send email to:", email);
+
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Ravi Graphics" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Your Verification Code",
+      html: `
+        <div style="font-family: Arial;">
+          <h2>Hello ${name}</h2>
+          <p>Your OTP code is:</p>
+          <h1>${otp}</h1>
+          <p>This code expires in 10 minutes.</p>
+        </div>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+
+    console.log("✅ Email sent:", info.messageId);
+
+    return true;
+  } catch (error) {
+    console.error("❌ Email sending failed:", error);
+    throw error;
+  }
 };
 
 // STEP 1: Signup - Send verification code to email
