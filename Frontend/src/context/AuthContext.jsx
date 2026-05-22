@@ -166,7 +166,7 @@ export const AuthProvider = ({ children }) => {
     
     try {
       if (isSaved) {
-        await axios.delete(`${API_URL}/auth/save-product/${productId}`);
+        await axios.delete(`${API_URL}/auth/remove-saved-product/${productId}`);
         setSavedProducts(prev => prev.filter(id => id !== productId));
         console.log('Product removed from MongoDB saved list');
       } else {
