@@ -5,14 +5,14 @@ import nodemailer from "nodemailer";
 
 const router = express.Router();
 
-// ✅ BREVO SMTP CONFIGURATION FOR RENDER (Port 2525 works on free tier)
+// ✅ BREVO SMTP CONFIGURATION - Using your variable names
 const transporter = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com',
-  port: 2525,  // Render allows port 2525 on free tier
-  secure: false,  // false for port 2525
+  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+  port: parseInt(process.env.SMTP_PORT) || 587,
+  secure: false,  // false for port 587
   auth: {
-    user: process.env.BREVO_SMTP_LOGIN,  // Your Brevo login email
-    pass: process.env.BREVO_SMTP_KEY,     // Your Brevo SMTP key
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
   tls: {
     ciphers: 'SSLv3',
@@ -65,7 +65,7 @@ const sendVerificationEmail = async (email, name, otp) => {
     console.log("📧 Attempting to send OTP to:", email);
 
     const mailOptions = {
-      from: `"Ravi Graphics" <${process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SMTP_LOGIN}>`,
+      from: `"Ravi Graphics" <${process.env.EMAIL_FROM || process.env.SMTP_USER}>`,
       to: email,
       subject: "Your Verification Code - Ravi Graphics",
       html: `
