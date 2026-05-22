@@ -89,11 +89,12 @@ Ravi Graphics — Where Quality Meets Excellence ☀️
   }
 };
 
-// Temporary storage for unverified users (in production, use Redis or similar)
-// For now, we'll store in memory (will reset on server restart)
+// Temporary storage for unverified users
 const tempUsers = new Map();
 
-// Signup Route - ONLY stores temporarily, does NOT save to DB
+// ==================== AUTH ROUTES ====================
+
+// Signup Route
 router.post("/signup", async (req, res) => {
   try {
     const { name, email, phone } = req.body;
@@ -114,9 +115,9 @@ router.post("/signup", async (req, res) => {
 
     // Generate OTP
     const otp = generateOTP();
-    const verificationCodeExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    const verificationCodeExpires = Date.now() + 10 * 60 * 1000;
 
-    // Store user data temporarily (not in database yet)
+    // Store user data temporarily
     tempUsers.set(email.toLowerCase(), {
       name,
       email: email.toLowerCase(),
@@ -133,7 +134,6 @@ router.post("/signup", async (req, res) => {
       await sendVerificationEmail(email, name, otp);
     } catch (emailError) {
       console.error("Email sending failed:", emailError.message);
-      // Remove temp user if email fails
       tempUsers.delete(email.toLowerCase());
       return res.status(500).json({
         success: false,
@@ -156,7 +156,7 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-// Verify OTP - ONLY saves to DB after successful verification
+// Verify OTP
 router.post("/verify-otp", async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -165,7 +165,6 @@ router.post("/verify-otp", async (req, res) => {
       return res.status(400).json({ error: "Email and OTP are required" });
     }
 
-    // Check temp storage for unverified user
     const tempUser = tempUsers.get(email.toLowerCase());
 
     if (!tempUser) {
@@ -174,7 +173,6 @@ router.post("/verify-otp", async (req, res) => {
       });
     }
 
-    // Check if OTP is expired
     if (Date.now() > tempUser.verificationCodeExpires) {
       tempUsers.delete(email.toLowerCase());
       return res.status(400).json({
@@ -182,14 +180,13 @@ router.post("/verify-otp", async (req, res) => {
       });
     }
 
-    // Check if OTP matches
     if (tempUser.otp !== otp) {
       return res.status(400).json({
         error: "Invalid verification code. Please try again.",
       });
     }
 
-    // Check if user already exists in DB (might have been created by another process)
+    // Check if user already exists
     let user = await User.findOne({
       $or: [{ email: tempUser.email }, { phone: tempUser.phone }],
     });
@@ -209,7 +206,7 @@ router.post("/verify-otp", async (req, res) => {
       user.verificationCodeExpires = undefined;
       await user.save();
     } else {
-      // Create NEW user in database ONLY after successful verification
+      // Create new user
       user = new User({
         name: tempUser.name,
         email: tempUser.email,
@@ -220,12 +217,10 @@ router.post("/verify-otp", async (req, res) => {
       await user.save();
     }
 
-    // Remove from temp storage
     tempUsers.delete(email.toLowerCase());
 
     console.log("✅ User verified and saved to DB:", user._id);
 
-    // Generate JWT token
     const token = jwt.sign(
       {
         userId: user._id,
@@ -253,7 +248,7 @@ router.post("/verify-otp", async (req, res) => {
   }
 });
 
-// Resend verification code
+// Resend verification
 router.post("/resend-verification", async (req, res) => {
   try {
     const { email } = req.body;
@@ -266,7 +261,6 @@ router.post("/resend-verification", async (req, res) => {
       });
     }
 
-    // Check if already verified in DB
     const existingUser = await User.findOne({
       email: email.toLowerCase(),
     });
@@ -278,18 +272,15 @@ router.post("/resend-verification", async (req, res) => {
       });
     }
 
-    // Generate new OTP
     const otp = generateOTP();
     const verificationCodeExpires = Date.now() + 10 * 60 * 1000;
 
-    // Update temp user
     tempUser.otp = otp;
     tempUser.verificationCodeExpires = verificationCodeExpires;
     tempUsers.set(email.toLowerCase(), tempUser);
 
     console.log(`🔐 Resend OTP for ${email}: ${otp}`);
 
-    // Send new OTP
     await sendVerificationEmail(email, tempUser.name, otp);
 
     res.json({
@@ -356,6 +347,131 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// ==================== SAVED PRODUCTS ROUTES ====================
+
+// Get user's saved products
+router.get("/saved-products", verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select("savedProducts");
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    res.json({ 
+      success: true, 
+      savedProducts: user.savedProducts || [] 
+    });
+  } catch (error) {
+    console.error("Error fetching saved products:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Save a product
+router.post("/save-product", verifyToken, async (req, res) => {
+  try {
+    const { productId } = req.body;
+    
+    if (!productId) {
+      return res.status(400).json({ error: "Product ID is required" });
+    }
+    
+    const user = await User.findById(req.userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    // Check if already saved
+    if (user.savedProducts.includes(productId)) {
+      return res.status(400).json({ 
+        error: "Product already saved",
+        alreadySaved: true
+      });
+    }
+    
+    // Add to saved products
+    user.savedProducts.push(productId);
+    await user.save();
+    
+    res.json({ 
+      success: true, 
+      message: "Product saved successfully",
+      savedProducts: user.savedProducts
+    });
+  } catch (error) {
+    console.error("Error saving product:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Remove a saved product
+router.delete("/remove-saved-product/:productId", verifyToken, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    
+    const user = await User.findById(req.userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    // Filter out the product
+    user.savedProducts = user.savedProducts.filter(id => id !== productId);
+    await user.save();
+    
+    res.json({ 
+      success: true, 
+      message: "Product removed successfully",
+      savedProducts: user.savedProducts
+    });
+  } catch (error) {
+    console.error("Error removing saved product:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Toggle save product (save if not saved, remove if already saved)
+router.post("/toggle-save-product", verifyToken, async (req, res) => {
+  try {
+    const { productId } = req.body;
+    
+    if (!productId) {
+      return res.status(400).json({ error: "Product ID is required" });
+    }
+    
+    const user = await User.findById(req.userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    const exists = user.savedProducts.includes(productId);
+    let action;
+    
+    if (exists) {
+      user.savedProducts = user.savedProducts.filter(id => id !== productId);
+      action = "removed";
+    } else {
+      user.savedProducts.push(productId);
+      action = "added";
+    }
+    
+    await user.save();
+    
+    res.json({ 
+      success: true, 
+      action: action,
+      message: action === "added" ? "Product saved" : "Product removed",
+      savedProducts: user.savedProducts
+    });
+  } catch (error) {
+    console.error("Error toggling saved product:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Clean up expired temp users every hour
 setInterval(() => {
   const now = Date.now();
@@ -365,6 +481,6 @@ setInterval(() => {
       console.log(`🧹 Cleaned up expired temp user: ${email}`);
     }
   }
-}, 60 * 60 * 1000); // Run every hour
+}, 60 * 60 * 1000);
 
 export default router;
