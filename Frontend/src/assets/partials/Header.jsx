@@ -11,6 +11,7 @@ import {
   LogOut,
   XCircle,
   ShoppingBag,
+  UserCheck,
 } from "lucide-react";
 import axios from "axios";
 import Logo from "../../assets/logo.png";
@@ -37,6 +38,7 @@ export default function Header() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileUserMenu, setShowMobileUserMenu] = useState(false);
 
   // Search states
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,6 +52,7 @@ export default function Header() {
   const hoverTimeoutRef = useRef(null);
   const megaMenuRef = useRef(null);
   const userMenuRef = useRef(null);
+  const mobileUserMenuRef = useRef(null);
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -58,6 +61,9 @@ export default function Header() {
 
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setShowUserMenu(false);
+      }
+      if (mobileUserMenuRef.current && !mobileUserMenuRef.current.contains(event.target)) {
+        setShowMobileUserMenu(false);
       }
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowSearchSuggestions(false);
@@ -488,22 +494,27 @@ export default function Header() {
               )}
             </button>
 
-            {/* User Login/Profile */}
+            {/* User Login/Profile - Desktop with Hover */}
             <div className="relative ml-0.5 sm:ml-1" ref={userMenuRef}>
               {user ? (
                 <>
                   <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 text-gray-500 hover:text-orange-500 transition-colors rounded-lg hover:bg-gray-50"
+                    onMouseEnter={() => setShowUserMenu(true)}
+                    onMouseLeave={() => setShowUserMenu(false)}
+                    className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 text-orange-500 hover:text-orange-600 transition-colors rounded-lg hover:bg-orange-50"
                   >
-                    <User size={18} className="sm:w-5 sm:h-5" />
+                    <UserCheck size={18} className="sm:w-5 sm:h-5" />
                     <ChevronDown
                       size={12}
                       className={`transition-transform hidden sm:block ${showUserMenu ? "rotate-180" : ""}`}
                     />
                   </button>
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
+                    <div 
+                      onMouseEnter={() => setShowUserMenu(true)}
+                      onMouseLeave={() => setShowUserMenu(false)}
+                      className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50"
+                    >
                       <div className="px-4 py-3 border-b border-gray-100">
                         <p className="text-sm font-medium text-gray-900">
                           {user.name || "User"}
@@ -568,25 +579,76 @@ export default function Header() {
               )}
             </button>
 
-            {user ? (
-              <div className="relative">
+            {/* Mobile Account Toggle - Proper Dropdown */}
+            <div className="relative" ref={mobileUserMenuRef}>
+              {user ? (
+                <>
+                  <button
+                    onClick={() => setShowMobileUserMenu(!showMobileUserMenu)}
+                    className="p-2 text-orange-500 rounded-lg hover:bg-orange-50 transition-colors"
+                    aria-label="User Menu"
+                  >
+                    <UserCheck size={18} />
+                  </button>
+                  {showMobileUserMenu && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="text-sm font-medium text-gray-900">
+                          {user.name || "User"}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5 break-all">{user.email}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowMobileUserMenu(false);
+                          navigate("/my-orders");
+                          closeMobileMenu();
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                      >
+                        <ShoppingBag size={16} />
+                        My Orders
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowMobileUserMenu(false);
+                          handleSavedProductsClick();
+                          closeMobileMenu();
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                      >
+                        <Heart size={16} />
+                        Saved Items
+                        {savedProducts.length > 0 && (
+                          <span className="ml-auto bg-orange-500 text-white text-xs rounded-full px-2 py-0.5">
+                            {savedProducts.length}
+                          </span>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowMobileUserMenu(false);
+                          logout();
+                          closeMobileMenu();
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-gray-50 flex items-center gap-3 transition-colors rounded-b-xl"
+                      >
+                        <LogOut size={16} />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
                 <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  onClick={() => openAuthModal("login")}
                   className="p-2 text-gray-600 rounded-lg hover:bg-gray-50"
-                  aria-label="User Menu"
+                  aria-label="Login"
                 >
                   <User size={18} />
                 </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => openAuthModal("login")}
-                className="p-2 text-gray-600 rounded-lg hover:bg-gray-50"
-                aria-label="Login"
-              >
-                <User size={18} />
-              </button>
-            )}
+              )}
+            </div>
 
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
@@ -809,31 +871,6 @@ export default function Header() {
               >
                 Custom Design
               </Link>
-              
-              <button
-                onClick={() => {
-                  closeMobileMenu();
-                  handleSavedProductsClick();
-                }}
-                className="w-full flex items-center justify-between py-3 text-base font-medium text-gray-700 hover:text-orange-500 transition-colors"
-              >
-                <span>Saved Items</span>
-                {user && savedProducts.length > 0 && (
-                  <span className="bg-orange-500 text-white text-xs rounded-full px-2 py-0.5">
-                    {savedProducts.length}
-                  </span>
-                )}
-              </button>
-              
-              <button
-                onClick={() => {
-                  closeMobileMenu();
-                  handleOrdersClick();
-                }}
-                className="block py-3 text-base font-medium text-gray-700 hover:text-orange-500 transition-colors w-full text-left"
-              >
-                My Orders
-              </button>
               
               <Link
                 to="/quote"
