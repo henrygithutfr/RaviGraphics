@@ -34,7 +34,7 @@ const app = express();
 // CORS configuration
 const allowedOrigins = [
   'https://ravigraphics.vercel.app', 
-  'https://ravigraphics.onrender.com'
+  'https://ravigraphics-5qg9.onrender.com'
 ];
 
 app.use(cors({
