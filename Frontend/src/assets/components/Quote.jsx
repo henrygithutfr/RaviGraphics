@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-const API = "https://ravigraphics.onrender.com";
+const API = import.meta.env.VITE_API_URL;
 import {
   Printer,
   Upload,
